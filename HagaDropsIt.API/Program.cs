@@ -6,9 +6,11 @@ using HagaDropsIt.SQL.Store.Repositories;
 using Microsoft.EntityFrameworkCore;
 using HagaDropsIt.Shared.Entities;
 
+//TODO: Remove Cart from SQL.Store and add it to Mongo.Orders or another SQL DB.
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure SQL database context
+
 var connectionString = builder.Configuration.GetConnectionString("HagaDropsItStore");
 builder.Services.AddDbContext<StoreDbContext>(options =>
     options.UseSqlServer(connectionString));
