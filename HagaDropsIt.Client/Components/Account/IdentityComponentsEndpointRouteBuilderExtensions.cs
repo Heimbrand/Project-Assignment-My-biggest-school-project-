@@ -1,6 +1,5 @@
 using HagaDropsIt.Client.Components.Account.Pages;
 using HagaDropsIt.Client.Components.Account.Pages.Manage;
-using HagaDropsIt.Client.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;

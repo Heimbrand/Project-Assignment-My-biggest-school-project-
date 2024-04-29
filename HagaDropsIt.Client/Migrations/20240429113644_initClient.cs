@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HagaDropsIt.Client.Migrations
 {
     /// <inheritdoc />
-    public partial class initt : Migration
+    public partial class initClient : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -284,14 +284,14 @@ namespace HagaDropsIt.Client.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "53e14e97-690c-4f31-aa17-c842860915e1", null, "Admin", "ADMIN" },
-                    { "b96ab6b1-d0cd-47b3-bd77-b56674461701", null, "User", "USER" }
+                    { "6b5abc4e-edfe-48e5-8cee-e1c2b62be5fd", null, "User", "USER" },
+                    { "afc302fb-4c69-455c-bb4c-b3d006457f5a", null, "Admin", "ADMIN" }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "Adress", "CartId", "City", "ConcurrencyStamp", "DateOfBirth", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "Nickname", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName", "WishListId", "Zip" },
-                values: new object[] { "09fefaa6-1f56-4467-aceb-bc2c0a3ef0b0", 0, null, null, null, "dff8e3fc-821e-43df-8ecc-c33fa299653c", new DateOnly(1, 1, 1), "admin.admin@admin.se", true, null, null, false, null, null, "ADMIN.ADMIN@ADMIN.SE", "ADMIN.ADMIN@ADMIN.SE", "AQAAAAIAAYagAAAAEGaUNNbzfPN3WOScG2TOm6rTm3QCWa+eUXj3ZU9QaUyeL8oLtuiCGayma5g9JsQmdQ==", null, false, "5fa9c3b0-0012-4bd4-8168-c760e4b91691", false, "admin.admin@admin.se", null, null });
+                values: new object[] { "54475609-cd68-45c1-9b22-7bd129ae11c8", 0, null, null, null, "dae55c77-503e-4181-880f-9f70d37e9560", new DateOnly(1, 1, 1), "admin.admin@admin.se", true, null, null, false, null, null, "ADMIN.ADMIN@ADMIN.SE", "ADMIN.ADMIN@ADMIN.SE", "AQAAAAIAAYagAAAAELaaEXZKPSF63PPpetIX+zHUbsr1E51shMTbSLR3yAl8GQccPzWA5fSIdeZQyYLmiQ==", null, false, "c666fa12-6c08-4a07-ab19-7ae0c17df1e8", false, "admin.admin@admin.se", null, null });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

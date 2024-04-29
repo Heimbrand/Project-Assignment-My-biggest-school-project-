@@ -1,16 +1,13 @@
 ﻿@page "/admin/products/add"
 @using HagaDropsIt.Shared.DTOs
 @using HagaDropsIt.Shared.Interfaces
-@using System.Collections.Immutable
-@using HagaDropsIt.Client.Utils;
 @inject IProductService<ProductDto> ProductService
 @inject ICategoryService<CategoryDto> CategoryService
 @inject IGenreService<GenreDto> GenreService
 @inject NavigationManager NavigationManager
 @layout AdminLayout
 @inject ILogger<AddProduct> Logger
-@inject IBlobStorageServices BlobStorageService
-@inject IBlobTools BlobTools
+
 
 <h3>Add New Product</h3>
 
@@ -130,21 +127,6 @@
         }
 
         if (selectedFile != null)
-        {
-            using var stream = selectedFile.OpenReadStream();
-            string newBlobName = BlobTools.GenerateBlobName(selectedFile.Name);
-            var uploadResult = await BlobStorageService.UploadBlobAsync(productBlobContainer, newBlobName, stream);
-            if (uploadResult.Success)
-            {
-                newProduct.ImageURL = uploadResult.Data.Replace("\"", "").Trim();
-            }
-            else
-            {
-                Logger.LogError("Error uploading file: {ErrorMessage}", uploadResult.ErrorMessage);
-                return;
-            }
-        }
-        else
         {
             newProduct.ImageURL = "/Assets/Images/default-image.webp";
         }

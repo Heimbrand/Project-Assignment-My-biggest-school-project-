@@ -1,12 +1,9 @@
 ﻿@page "/admin/events/delete/{EventId:int}"
 @using HagaDropsIt.Shared.DTOs
 @using HagaDropsIt.Shared.Interfaces
-@using HagaDropsIt.Client.Utils;
 @inject ILogger<EditEvent> Logger
 @inject IEventService<EventDto> EventService
 @inject NavigationManager NavigationManager
-@inject IBlobStorageServices BlobStorageService
-@inject IBlobTools BlobTools
 @layout AdminLayout
 
 <div class="container">
@@ -47,21 +44,7 @@ else
 
     private async Task ConfirmDeletion()
     {
-        string blobName = BlobTools.ExtractBlobNameFromUrl(eventToDelete.ImageURL);
-        Logger.LogInformation("Existing blob name: {BlobName}", blobName);
-        if (!string.IsNullOrEmpty(blobName))
-        {
-            var blobExists = await BlobStorageService.BlobExistsAsync(eventsBlobContainer, blobName);
-            Logger.LogInformation("Blob exists: {BlobExists}", blobExists.Data);
-            if (blobExists.Success && blobExists.Data)
-            {
-                var deleteResult = await BlobStorageService.DeleteBlobAsync(eventsBlobContainer, blobName);
-                if (!deleteResult.Success)
-                {
-                    Logger.LogWarning("Failed to delete existing blob: {BlobName}. Proceeding with update.", blobName);
-                }
-            }
-        }
+        
         await EventService.DeleteEvent(EventId);
         NavigationManager.NavigateTo("/admin/events");
     }

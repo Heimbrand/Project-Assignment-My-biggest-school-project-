@@ -1,3 +1,4 @@
+using HagaDropsIt.Client.Services;
 using HagaDropsIt.Shared.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -40,10 +41,12 @@ namespace HagaDropsIt.Client.Data
                     Email = "admin.admin@admin.se",
                     NormalizedEmail = "ADMIN.ADMIN@ADMIN.SE",
                     EmailConfirmed = true,
-                    PasswordHash = hasher.HashPassword(null, "YourPassword123!"),
-                }
+                    PasswordHash = hasher.HashPassword(null, "YourPassword123!")
 
-            );
+
+                });
+
+
 
 
 

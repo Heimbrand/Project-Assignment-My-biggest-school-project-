@@ -120,18 +120,18 @@ namespace HagaDropsIt.Client.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "09fefaa6-1f56-4467-aceb-bc2c0a3ef0b0",
+                            Id = "54475609-cd68-45c1-9b22-7bd129ae11c8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "dff8e3fc-821e-43df-8ecc-c33fa299653c",
+                            ConcurrencyStamp = "dae55c77-503e-4181-880f-9f70d37e9560",
                             DateOfBirth = new DateOnly(1, 1, 1),
                             Email = "admin.admin@admin.se",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN.ADMIN@ADMIN.SE",
                             NormalizedUserName = "ADMIN.ADMIN@ADMIN.SE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGaUNNbzfPN3WOScG2TOm6rTm3QCWa+eUXj3ZU9QaUyeL8oLtuiCGayma5g9JsQmdQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELaaEXZKPSF63PPpetIX+zHUbsr1E51shMTbSLR3yAl8GQccPzWA5fSIdeZQyYLmiQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "5fa9c3b0-0012-4bd4-8168-c760e4b91691",
+                            SecurityStamp = "c666fa12-6c08-4a07-ab19-7ae0c17df1e8",
                             TwoFactorEnabled = false,
                             UserName = "admin.admin@admin.se"
                         });
@@ -321,13 +321,13 @@ namespace HagaDropsIt.Client.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "53e14e97-690c-4f31-aa17-c842860915e1",
+                            Id = "afc302fb-4c69-455c-bb4c-b3d006457f5a",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "b96ab6b1-d0cd-47b3-bd77-b56674461701",
+                            Id = "6b5abc4e-edfe-48e5-8cee-e1c2b62be5fd",
                             Name = "User",
                             NormalizedName = "USER"
                         });

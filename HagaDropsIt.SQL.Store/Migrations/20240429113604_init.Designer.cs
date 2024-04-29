@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HagaDropsIt.SQL.Store.Migrations
 {
     [DbContext(typeof(StoreDbContext))]
-    [Migration("20240425180752_init")]
+    [Migration("20240429113604_init")]
     partial class init
     {
         /// <inheritdoc />

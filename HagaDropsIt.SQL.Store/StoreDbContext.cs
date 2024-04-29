@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using HagaDropsIt.Shared.Entities;
+﻿using HagaDropsIt.Shared.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace HagaDropsIt.SQL.Store;

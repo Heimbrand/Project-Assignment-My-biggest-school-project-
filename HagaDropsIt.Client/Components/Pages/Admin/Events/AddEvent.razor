@@ -1,14 +1,10 @@
 ﻿@page "/admin/events/add"
-@using HagaDropsIt.Client.Services
 @using HagaDropsIt.Shared.DTOs
 @using HagaDropsIt.Shared.Interfaces
-@using HagaDropsIt.Client.Utils;
 @using Microsoft.Extensions.Logging
 @inject ILogger<EditEvent> Logger
 @inject IEventService<EventDto> EventService
 @inject NavigationManager NavigationManager
-@inject IBlobStorageServices BlobStorageService
-@inject IBlobTools BlobTools
 @layout AdminLayout
 
 <div class="card container">
@@ -100,20 +96,6 @@
                 return;
             }
 
-            using var stream = selectedFile.OpenReadStream();
-            string newBlobName = BlobTools.GenerateBlobName(selectedFile.Name);
-            var uploadResult = await BlobStorageService.UploadBlobAsync(eventsBlobContainer, newBlobName, stream);
-            if (uploadResult.Success)
-            {
-                string cleanUrl = uploadResult.Data.Replace("\"", "").Trim();
-                newEvent.ImageURL = cleanUrl;
-                Logger.LogInformation("Uploaded new blob: {BlobName}", cleanUrl);
-            }
-            else
-            {
-                Logger.LogError("Error uploading file: {ErrorMessage}", uploadResult.ErrorMessage);
-                return;
-            }
         }
         else
         {

@@ -4,8 +4,6 @@
 @inject IProductService<ProductDto> ProductService
 @inject NavigationManager NavigationManager
 @layout AdminLayout
-@inject IBlobStorageServices BlobStorageService
-@inject IBlobTools BlobTools
 @inject ILogger<EditProduct> Logger
 <h3>Delete Product</h3>
 
@@ -43,21 +41,7 @@ else
 
     private async Task ConfirmDelete()
     {
-        string blobName = BlobTools.ExtractBlobNameFromUrl(product.ImageURL);
-        Logger.LogInformation("Existing blob name: {BlobName}", blobName);
-        if (!string.IsNullOrEmpty(blobName))
-        {
-            var blobExists = await BlobStorageService.BlobExistsAsync(productBlobContainer, blobName);
-            Logger.LogInformation("Blob exists: {BlobExists}", blobExists.Data);
-            if (blobExists.Success && blobExists.Data)
-            {
-                var deleteResult = await BlobStorageService.DeleteBlobAsync(productBlobContainer, blobName);
-                if (!deleteResult.Success)
-                {
-                    Logger.LogWarning("Failed to delete existing blob: {BlobName}. Proceeding with update.", blobName);
-                }
-            }
-        }
+      
         await ProductService.DeleteProduct(ProductId);
         NavigationManager.NavigateTo("/admin/products");
     }

@@ -1,6 +1,4 @@
-﻿using HagaDropsIt.Shared.Entities;
-
-namespace HagaDropsIt.Shared.DTOs;
+﻿namespace HagaDropsIt.Shared.DTOs;
 
 public class ReviewDto
 {

@@ -1,17 +1,13 @@
 ﻿@page "/admin/products/edit/{ProductId:int}"
-
-@using HagaDropsIt.Client.Data
 @using HagaDropsIt.Shared.DTOs
 @using HagaDropsIt.Shared.Interfaces
-@using HagaDropsIt.Client.Utils;
 @inject IProductService<ProductDto> ProductService
 @inject ICategoryService<CategoryDto> CategoryService
 @inject IGenreService<GenreDto> GenreService
 @inject NavigationManager NavigationManager
 @layout AdminLayout
 @inject ILogger<EditProduct> Logger
-@inject IBlobStorageServices BlobStorageService
-@inject IBlobTools BlobTools
+
 
 <div class=" container">
     
@@ -153,43 +149,10 @@ else
         }
         if (selectedFile != null)
         {
-            string blobName = BlobTools.ExtractBlobNameFromUrl(EditProdut.ImageURL);
-            Logger.LogInformation("Existing blob name: {BlobName}", blobName);
-            if (!string.IsNullOrEmpty(blobName))
-            {
-                var blobExists = await BlobStorageService.BlobExistsAsync(productBlobContainer, blobName);
-                Logger.LogInformation("Blob exists: {BlobExists}", blobExists.Data);
-                if (blobExists.Success && blobExists.Data)
-                {
-                    var deleteResult = await BlobStorageService.DeleteBlobAsync(productBlobContainer, blobName);
-                    if (!deleteResult.Success)
-                    {
-                        Logger.LogWarning("Failed to delete existing blob: {BlobName}. Proceeding with update.", blobName);
-                    }
-                }
-            }
-
-            using var stream = selectedFile.OpenReadStream();
-            string newBlobName = BlobTools.GenerateBlobName(selectedFile.Name);
-            var uploadResult = await BlobStorageService.UploadBlobAsync(productBlobContainer, newBlobName, stream);
-            if (uploadResult.Success)
-            {
-                string cleanUrl = uploadResult.Data.Replace("\"", "").Trim();
-                EditProdut.ImageURL = cleanUrl;
-                Logger.LogInformation("Uploaded new blob: {BlobName}", cleanUrl);
-            }
-            else
-            {
-                Logger.LogError("Error uploading file: {ErrorMessage}", uploadResult.ErrorMessage);
-                
-            }
-        }
-        else
-        {
-            var defaultImageUrl = "/Assets/Images/haga.webp";
+           var defaultImageUrl = "/Assets/Images/haga.webp";
             EditProdut.ImageURL = defaultImageUrl;
         }
-
+        
         await ProductService.UpdateProduct(EditProdut);
         Logger.LogInformation("Updated Product:", EditProdut.Name);
         NavigationManager.NavigateTo("/admin/products");

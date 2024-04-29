@@ -1,5 +1,4 @@
-﻿using HagaDropsIt.Client.Data;
-using HagaDropsIt.Shared.DTOs;
+﻿using HagaDropsIt.Shared.DTOs;
 using HagaDropsIt.Shared.Entities;
 using HagaDropsIt.Shared.Interfaces;
 using MongoDB.Bson;

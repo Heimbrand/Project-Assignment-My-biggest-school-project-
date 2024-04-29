@@ -1,6 +1,5 @@
 ﻿using HagaDropsIt.Shared.Entities;
 using HagaDropsIt.Shared.Interfaces;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace HagaDropsIt.API.Extensions;

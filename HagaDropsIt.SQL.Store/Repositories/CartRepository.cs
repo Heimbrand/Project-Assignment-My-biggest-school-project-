@@ -1,8 +1,6 @@
-﻿using HagaDropsIt.Shared.DTOs;
-using HagaDropsIt.Shared.Entities;
+﻿using HagaDropsIt.Shared.Entities;
 using HagaDropsIt.Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 namespace HagaDropsIt.SQL.Store.Repositories;
 

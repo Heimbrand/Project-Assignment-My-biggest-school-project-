@@ -1,6 +1,5 @@
 ﻿using HagaDropsIt.Shared.DTOs;
 using HagaDropsIt.Shared.Interfaces;
-using Microsoft.Extensions.Logging;
 
 namespace HagaDropsIt.Client.Services;
 

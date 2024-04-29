@@ -1,5 +1,4 @@
-﻿using HagaDropsIt.Client.Data;
-using HagaDropsIt.Shared.DTOs;
+﻿using HagaDropsIt.Shared.DTOs;
 using HagaDropsIt.Shared.Interfaces;
 
 namespace HagaDropsIt.Client.Services;

@@ -1,5 +1,4 @@
-﻿using HagaDropsIt.Client.Components.Pages.Admin.Customer;
-using HagaDropsIt.Shared.DTOs;
+﻿using HagaDropsIt.Shared.DTOs;
 using HagaDropsIt.Shared.Interfaces;
 
 namespace HagaDropsIt.Client.Services;

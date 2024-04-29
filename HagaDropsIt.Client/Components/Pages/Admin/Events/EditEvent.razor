@@ -1,14 +1,10 @@
 ﻿@page "/admin/events/edit/{EventId:int}"
 @using HagaDropsIt.Shared.DTOs
-@using HagaDropsIt.Client.Services
 @using HagaDropsIt.Shared.Interfaces
 @using Microsoft.Extensions.Logging
-@using HagaDropsIt.Client.Utils;
 @inject ILogger<EditEvent> Logger
 @inject IEventService<EventDto> EventService
 @inject NavigationManager NavigationManager
-@inject IBlobStorageServices BlobStorageService
-@inject IBlobTools BlobTools
 @layout AdminLayout
 
 <div class="card container">
@@ -80,8 +76,8 @@
     private string eventsBlobContainer = "events";
     private EventDto eventToEdit = new();
     private IBrowserFile? selectedFile;
-    private string startDateInput; 
-    private string endDateInput; 
+    private string startDateInput;
+    private string endDateInput;
 
     protected override async Task OnInitializedAsync()
     {
@@ -128,49 +124,16 @@
         }
         if (selectedFile != null)
         {
-            string blobName = BlobTools.ExtractBlobNameFromUrl(eventToEdit.ImageURL);
-            Logger.LogInformation("Existing blob name: {BlobName}", blobName);
-            if (!string.IsNullOrEmpty(blobName))
-            {
-                var blobExists = await BlobStorageService.BlobExistsAsync(eventsBlobContainer, blobName);
-                Logger.LogInformation("Blob exists: {BlobExists}", blobExists.Data);
-                if (blobExists.Success && blobExists.Data)
-                {
-                    var deleteResult = await BlobStorageService.DeleteBlobAsync(eventsBlobContainer, blobName);
-                    if (!deleteResult.Success)
-                    {
-                        Logger.LogWarning("Failed to delete existing blob: {BlobName}. Proceeding with update.", blobName);
-                    }
-                }
-            }
 
-            using var stream = selectedFile.OpenReadStream();
-            string newBlobName = BlobTools.GenerateBlobName(selectedFile.Name);
-            var uploadResult = await BlobStorageService.UploadBlobAsync(eventsBlobContainer, newBlobName, stream);
-            if (uploadResult.Success)
-            {
-                string cleanUrl = uploadResult.Data.Replace("\"", "").Trim();
-                eventToEdit.ImageURL = cleanUrl;
-                Logger.LogInformation("Uploaded new blob: {BlobName}", cleanUrl);
-            }
-            else
-            {
-                Logger.LogError("Error uploading file: {ErrorMessage}", uploadResult.ErrorMessage);
-                return;
-            }
-        }
-        else
-        {
             var defaultImageUrl = "/Assets/Images/haga.webp";
             eventToEdit.ImageURL = defaultImageUrl;
+
         }
 
         await EventService.UpdateEvent(eventToEdit);
         Logger.LogInformation("Updated event: {EventId}", eventToEdit.Id);
         NavigationManager.NavigateTo("/admin/events");
     }
-
-
 
     private void Cancel()
     {
