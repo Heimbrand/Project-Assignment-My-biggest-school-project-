@@ -20,7 +20,7 @@ Solution: Break out Cart from the SQL database where Products and Events are. We
 
 
 ---
-## Endpoints: Products
+## Endpoints: Products (Not Up To Date)
 
 ### Get All Products
 
