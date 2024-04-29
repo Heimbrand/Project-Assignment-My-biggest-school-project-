@@ -1,0 +1,303 @@
+﻿@page "/store"
+@inject IProductService<ProductDto> ProductService
+@inject IGenreService<GenreDto> GenreService
+@inject ICategoryService<CategoryDto> CategoryService
+@inject ICartService<CartDto, CartItemDto> CartService
+@inject ICustomerService<CustomerDto> CustomerService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+
+@using HagaDropsIt.Client.Data
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@using HagaDropsIt.Client.Services
+@using HagaDropsIt.Shared.Entities
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Runtime.CompilerServices
+@using System.Diagnostics
+
+<div class="store-layout">
+    <aside class="filter-sidebar">
+        <h2 class="filter-title">Filters</h2>
+
+        <section class="filter-group">
+            <h5>Search</h5>
+            <EditForm Model="@searchValue" OnValidSubmit="@SearchProduct">
+                <input list="product-search-list" type="search" @bind-value="searchValue" placeholder="Search..." class="search-input" />
+                <datalist id="product-search-list">
+                    @foreach (var product in products)
+                    {
+                        <option value="@product.Name" />
+                    }
+                </datalist>
+                <button type="submit" class="search-button">Search</button>
+            </EditForm>
+        </section>
+
+        <section class="filter-group">
+            <h5>Genre</h5>
+            @foreach (var genre in genres)
+            {
+                <label class="checkbox-label">
+                    <input type="checkbox" value="@genre.Name.ToLower()" @onclick="() => GetProductsByGenre(genre.Id)" />
+                    @genre.Name
+                </label>
+            }
+        </section>
+
+        <section class="filter-group">
+            <h5>Category</h5>
+            @foreach (var category in categories)
+            {
+                <label class="checkbox-label">
+                    <input type="checkbox" value="@category.Name.ToLower()" @onclick="() => GetProductsByCategory(category.Id)" />
+                    @category.Name
+                </label>
+            }
+        </section>
+    </aside>
+
+    <div class="product-catalog">
+        <h1 class="title-product-catalog">Product Catalog</h1>
+        <div class="product-grid">
+            @foreach (var product in products)
+            {
+                <div class="product-card">
+                    <div class="product-details" @onclick="() => ViewProductDetails(product.Id)">
+                        <div class="img-banner">
+                            @if (product.IsOnSale)
+                            {
+                                <div class="banner on-sale">On Sale!</div>
+                            }
+                            <img src="@product.ImageURL" alt="@product.Name" class="product-image" />
+
+                        </div>
+                        <div class="product-info">
+
+                            <h3 class="product-name">@product.Name</h3>
+                            @if (product.IsNew)
+                            {
+                                <div class="banner new-product">New release!</div>
+                            }
+                            <p class="product-description">@product.Description</p>
+                        </div>
+                    </div>
+                    <div class="product-footer">
+                        <span class="price" @onclick="() => ViewProductDetails(product.Id)">$@product.Price</span>
+                        <button @onclick="() => AddToCart(product)" class="button add-to-cart">Add to Cart</button>
+                    </div>
+
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private string searchValue = "";
+    private List<ProductDto> products = new();
+    private List<GenreDto> genres = new();
+    private List<CategoryDto> categories = new();
+    public ClaimsPrincipal User { get; set; }
+    private ApplicationUser user = new();
+    private CustomerDto customer { get; set; }
+
+
+
+    private async Task AddToCart(ProductDto product)
+    {
+        // if (user.Cart.CartItems is null || customer.Cart.CartItems  is null )
+        // {
+
+        // }
+
+        // user.Cart.CartItems ??= new List<CartItem>();
+        // customer.Cart.CartItems ??= new List<CartItem>();
+        if (customer != null)
+        {
+            var cartItem = new CartItemDto
+                {
+                    Product = new Product
+                    {
+                        Id = product.Id,
+                        CategoryId = product.CategoryId,
+                        GenreId = product.GenreId,
+                        Name = product.Name,
+                        Description = product.Description,
+                        Price = product.Price,
+                        ImageURL = product.ImageURL,
+                        PgRating = product.PgRating,
+                        IsOnSale = product.IsOnSale,
+                        IsNew = product.IsNew,
+                        IsInvisible = product.IsInvisible,
+                        Discount = product.Discount,
+                        Stock = product.Stock,
+                        RealeaseDate = product.RealeaseDate
+                    },
+                    Quantity = 1
+                };
+
+            await CartService.AddProductToCart(customer.Cart.Id, cartItem);
+            StateHasChanged();
+        }
+        else
+        {
+            var cartItem = new CartItemDto
+                {
+                    Product = new Product
+                    {
+                        Id = product.Id,
+                        CategoryId = product.CategoryId,
+                        GenreId = product.GenreId,
+                        Name = product.Name,
+                        Description = product.Description,
+                        Price = product.Price,
+                        ImageURL = product.ImageURL,
+                        PgRating = product.PgRating,
+                        IsOnSale = product.IsOnSale,
+                        IsNew = product.IsNew,
+                        IsInvisible = product.IsInvisible,
+                        Discount = product.Discount,
+                        Stock = product.Stock,
+                        RealeaseDate = product.RealeaseDate
+                    },
+                    Quantity = 1
+                };
+
+            await CartService.AddProductToCart(user.Cart.Id, cartItem);
+            StateHasChanged();
+        }
+
+
+    }
+
+    private async Task GetProductsByGenre(int genreId)
+    {
+        var productByGenreResults = await ProductService.GetProductsByGenre(genreId);
+        products.Clear();
+        products.AddRange(productByGenreResults);
+
+    }
+
+    private async Task GetProductsByCategory(int categoryId)
+    {
+        var productByCategoryResults = await ProductService.GetProductsByCategory(categoryId);
+        products.Clear();
+        products.AddRange(productByCategoryResults);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var productResults = await ProductService.GetAllProducts();
+        products.AddRange(productResults);
+
+        var genreResults = await GenreService.GetAllGenres();
+        genres.AddRange(genreResults);
+
+        var categoryResults = await CategoryService.GetAllCategories();
+        categories.AddRange(categoryResults);
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (!authState.User.Identity.IsAuthenticated)
+        {
+
+
+
+            customer = new CustomerDto();
+
+            await CustomerService.AddCustomer(customer);
+            var cart = await CartService.CreateCart();
+            cart.CustomerGuid = Guid.NewGuid();
+            customer.CustomerGuid = cart.CustomerGuid;
+            cart.UserGuid = Guid.NewGuid();
+            cart.CartItems = new List<CartItemDto>();
+            await CartService.UpdateCart(cart);
+
+
+
+
+
+            if (customer is null)
+            {
+                return;
+            }
+
+            if (customer.Cart.Id == 0)
+            {
+                var customerCart = await CartService.GetCartByUserGuid(customer.CustomerGuid);
+                customer.Cart.Id = customerCart.Id;
+                customer.Cart.UserGuid = customerCart.UserGuid;
+                customer.Cart.CartItems = customerCart.CartItems.Select(dto =>
+                    new CartItem
+                        {
+                            Product = dto.Product,
+                            Event = dto.Event
+                        }).ToList();
+            }
+
+
+
+        }
+        else
+        {
+            user = await UserManager.GetUserAsync(authState.User);
+
+
+            if (user is null)
+            {
+                return;
+            }
+
+            if (user.Cart is null)
+            {
+                user.Cart = new Cart();
+                var userCart = await CartService.GetCartByUserGuid(Guid.Parse(user.Id));
+                user.Cart.Id = userCart.Id;
+                user.Cart.UserGuid = userCart.UserGuid;
+                user.Cart.CartItems = userCart.CartItems.Select(dto =>
+                    new CartItem
+                        {
+                            Product = dto.Product,
+                            Event = dto.Event
+                        }).ToList();
+            }
+
+            StateHasChanged();
+        }
+
+
+    }
+    private async Task SearchProduct()
+    {
+        if (string.IsNullOrEmpty(searchValue))
+        {
+            var productResults = await ProductService.GetAllProducts();
+            UpdateProducts(productResults);
+
+            return;
+        }
+
+        var searchResults = await ProductService.GetProductsByName(searchValue);
+        UpdateProducts(searchResults);
+    }
+
+    private void UpdateProducts(IEnumerable<ProductDto> newProducts)
+    {
+        products.Clear();
+        products.AddRange(newProducts);
+        StateHasChanged();
+    }
+
+    private async Task ViewProductDetails(int productId)
+    {
+        var url = $"/product/details/{productId}";
+        NavigationManager.NavigateTo(url);
+    }
+
+
+}

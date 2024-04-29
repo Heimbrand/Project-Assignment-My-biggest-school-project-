@@ -1,0 +1,170 @@
+﻿@page "/admin/products/add"
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@using System.Collections.Immutable
+@using HagaDropsIt.Client.Utils;
+@inject IProductService<ProductDto> ProductService
+@inject ICategoryService<CategoryDto> CategoryService
+@inject IGenreService<GenreDto> GenreService
+@inject NavigationManager NavigationManager
+@layout AdminLayout
+@inject ILogger<AddProduct> Logger
+@inject IBlobStorageServices BlobStorageService
+@inject IBlobTools BlobTools
+
+<h3>Add New Product</h3>
+
+<EditForm Model="newProduct" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="name">Name:</label>
+        <InputText id="name" class="form-control" @bind-Value="newProduct.Name" required />
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description:</label>
+        <InputTextArea id="description" class="form-control" @bind-Value="newProduct.Description" required />
+    </div>
+
+    <div class="form-group">
+        <label for="price">Price:</label>
+        <InputNumber id="price" class="form-control" @bind-Value="newProduct.Price" required />
+    </div>
+
+    <div class="form-group">
+        <label for="categoryId">Category:</label>
+        <InputSelect id="categoryId" class="form-control" @bind-Value="newProduct.CategoryId">
+            <option>Välj en kategori!</option>
+            @foreach (var category in categories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="form-group">
+        <label for="genreId">Genre:</label>
+        <InputSelect id="genreId" class="form-control" @bind-Value="newProduct.GenreId">
+            <option>Välj en genre!</option>
+            @foreach (var genre in genres)
+            {
+                <option value="@genre.Id">@genre.Name</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="form-group">
+        <label for="PgRating">Pg rating</label>
+        <InputNumber id="PgRating" class="form-control" @bind-Value="newProduct.PgRating" required />
+    </div>
+
+    <div class="form-group">
+        <label for="isOnSale">Is On Sale:</label>
+        <InputCheckbox id="isOnSale" class="form-check-input" @bind-Value="newProduct.IsOnSale" />
+    </div>
+
+    <div class="form-group">
+        <label for="isNew">Is New:</label>
+        <InputCheckbox id="isNew" class="form-check-input" @bind-Value="newProduct.IsNew" />
+    </div>
+
+    <div class="form-group">
+        <label for="IsInvisible">Dölj för kund?</label>
+        <InputCheckbox id="IsInvisible" class="form-check-input" @bind-Value="newProduct.IsInvisible" />
+    </div>
+
+    <div class="form-group">
+        <label for="Discount">Rabatt i %</label>
+        Ingen implementation; kommer antagligen inte få det heller=)
+        <InputNumber id="Discount" class="form-control" @bind-Value="newProduct.Discount" required />
+    </div>
+
+    <div class="form-group">
+        <label for="stock">Lager</label>
+        <InputNumber id="stock" class="form-control" @bind-Value="newProduct.Stock" required />
+    </div>
+
+    <div class="form-group">
+        <label for="releaseDate">Release Date (MM/dd/yyyy):</label>
+        <InputText id="releaseDate" class="form-control" @bind-Value="releaseDateInput" required />
+    </div>
+
+    <div class=" uploader-group">
+        <label class="uploader-label" for="imageFile">Product Image:</label>
+        <InputFile class="uploader" id="imageFile" OnChange="HandleFileSelected" />
+    </div>
+    <button type="submit" class="btn btn-success">Create Product</button>
+    <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+</EditForm>
+
+@code {
+    private ProductDto newProduct = new();
+    private List<CategoryDto> categories = new();
+    private List<GenreDto> genres = new();
+    private List<int> selectedGenreIds = new();
+    private IBrowserFile? selectedFile;
+    private string productBlobContainer = "products";
+    private string releaseDateInput = DateTime.Now.ToString("yyyy-MM-dd");
+
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    private async Task OnValidSubmit()
+    {
+        
+        DateTime releaseDate;
+       
+        if (DateTime.TryParse(releaseDateInput, out releaseDate))
+        {
+            newProduct.RealeaseDate = releaseDate;
+        }
+        else
+        {
+            Logger.LogError("Invalid release date format.");
+            return; // Prevent the submission if the date format is incorrect
+        }
+
+        if (selectedFile != null)
+        {
+            using var stream = selectedFile.OpenReadStream();
+            string newBlobName = BlobTools.GenerateBlobName(selectedFile.Name);
+            var uploadResult = await BlobStorageService.UploadBlobAsync(productBlobContainer, newBlobName, stream);
+            if (uploadResult.Success)
+            {
+                newProduct.ImageURL = uploadResult.Data.Replace("\"", "").Trim();
+            }
+            else
+            {
+                Logger.LogError("Error uploading file: {ErrorMessage}", uploadResult.ErrorMessage);
+                return;
+            }
+        }
+        else
+        {
+            newProduct.ImageURL = "/Assets/Images/default-image.webp";
+        }
+
+        await ProductService.AddProduct(newProduct);
+        Logger.LogInformation("Added product: {ProductId}", newProduct.Name);
+        NavigationManager.NavigateTo("/admin/products");
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await CategoryService.GetAllCategories() as List<CategoryDto>;
+        genres = await GenreService.GetAllGenres() as List<GenreDto>;
+    }
+
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/admin/products");
+    }
+
+        }

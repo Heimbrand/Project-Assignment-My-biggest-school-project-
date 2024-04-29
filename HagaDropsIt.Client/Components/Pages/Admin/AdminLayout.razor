@@ -1,0 +1,56 @@
+﻿@using HagaDropsIt.Client.Components.Layout
+@inherits LayoutComponentBase
+@layout MainLayout
+
+<div class="admin-layout">
+    <aside>
+        <nav>
+            <ul>
+                <li><a href="admin/" class="nav-link">Dashboard</a></li>
+                <li><a href="admin/customer" class="nav-link">Customers</a></li>
+                <li><a href="admin/products" class="nav-link">Products</a></li>
+                <li><a href="admin/events" class="nav-link">Events</a></li>
+                <li><a href="admin/orders" class="nav-link">Orders</a></li>
+            </ul>
+        </nav>
+    </aside>
+    <main>
+        <div class="sideDropmenu">
+            <button class="dropdown-button" @onclick="ToggleSideDropMenu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+                    <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
+                </svg>
+
+            </button>
+
+            <div class="dropdownContainer" style="@dropdownContainerStyle">                
+                      <ul class="dropdown-items">
+                        <li><a href="admin/" class="dropdown-link" @onclick="ToggleSideDropMenu">Dashboard</a></li>
+                        <li><a href="admin/customer" class="dropdown-link" @onclick="ToggleSideDropMenu">Customers</a></li>
+                        <li><a href="admin/products" class="dropdown-link" @onclick="ToggleSideDropMenu">Products</a></li>
+                        <li><a href="admin/events" class="dropdown-link" @onclick="ToggleSideDropMenu">Events</a></li>
+                        <li><a href="admin/orders" class="dropdown-link" @onclick="ToggleSideDropMenu">Orders</a></li>
+                    </ul>
+                </div>
+            
+        </div>
+        @Body
+    </main>
+</div>
+@code{
+ 
+    bool isDropdownVisible = false;
+    string dropdownContainerStyle = "display: none;";
+
+    private void LocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        StateHasChanged();
+    }
+
+    private void ToggleSideDropMenu()
+    {
+        isDropdownVisible = !isDropdownVisible;    
+        dropdownContainerStyle = isDropdownVisible ? "display: flex;" : "display: none;";
+    }
+     
+}

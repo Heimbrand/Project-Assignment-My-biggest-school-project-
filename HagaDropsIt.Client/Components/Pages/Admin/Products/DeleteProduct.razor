@@ -1,0 +1,69 @@
+﻿@page "/admin/products/delete/{ProductId:int}"
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@inject IProductService<ProductDto> ProductService
+@inject NavigationManager NavigationManager
+@layout AdminLayout
+@inject IBlobStorageServices BlobStorageService
+@inject IBlobTools BlobTools
+@inject ILogger<EditProduct> Logger
+<h3>Delete Product</h3>
+
+@if (product == null)
+{
+    <p>Loading product details...</p>
+}
+else
+{
+    <div class="delete-confirmation">
+        <h5>Are you sure you want to delete this product?</h5>
+        <div>
+            <p><strong>Product Name:</strong> @product.Name</p>
+            <p><strong>Description:</strong> @product.Description</p>
+            <p><strong>Price:</strong> @product.Price:C2</p>
+        </div>
+        <button class="btn btn-danger" @onclick="ConfirmDelete">Delete</button>
+        <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+    </div>
+}
+
+@code {
+    [Parameter] public int ProductId { get; set; }
+    private ProductDto product;
+    private string productBlobContainer = "products";
+
+    protected override async Task OnInitializedAsync()
+    {
+        product = await ProductService.GetProductById(ProductId);
+        if (product == null)
+        {
+            NavigationManager.NavigateTo("/admin/products");
+        }
+    }
+
+    private async Task ConfirmDelete()
+    {
+        string blobName = BlobTools.ExtractBlobNameFromUrl(product.ImageURL);
+        Logger.LogInformation("Existing blob name: {BlobName}", blobName);
+        if (!string.IsNullOrEmpty(blobName))
+        {
+            var blobExists = await BlobStorageService.BlobExistsAsync(productBlobContainer, blobName);
+            Logger.LogInformation("Blob exists: {BlobExists}", blobExists.Data);
+            if (blobExists.Success && blobExists.Data)
+            {
+                var deleteResult = await BlobStorageService.DeleteBlobAsync(productBlobContainer, blobName);
+                if (!deleteResult.Success)
+                {
+                    Logger.LogWarning("Failed to delete existing blob: {BlobName}. Proceeding with update.", blobName);
+                }
+            }
+        }
+        await ProductService.DeleteProduct(ProductId);
+        NavigationManager.NavigateTo("/admin/products");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/admin/products");
+    }
+}

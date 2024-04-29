@@ -1,0 +1,28 @@
+﻿.container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 1rem;
+    border-radius: 20px;
+}
+
+.delete-confirmation {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 5px;
+    margin-top: 20px;
+}
+
+.event-details {
+    margin-bottom: 20px;
+}
+
+.btn {
+    margin-right: 10px;
+}
+
+.buttons{
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}

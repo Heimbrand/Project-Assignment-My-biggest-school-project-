@@ -1,0 +1,56 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using HagaDropsIt.Client.Data
+@using HagaDropsIt.Shared.Entities
+
+@inject SignInManager<ApplicationUser> SignInManager
+
+<ul class="nav nav-pills flex-row menu">
+    <li class="nav-item" id="profileNavItem">
+        <NavLink class="nav-link" id="profileNavLink" href="Account/Manage" Match="NavLinkMatch.All">Profile</NavLink>
+    </li>
+    <li class="nav-item" id="emailNavItem">
+        <NavLink class="nav-link" id="emailNavLink" href="Account/Manage/Email">Email</NavLink>
+    </li>
+    <li class="nav-item" id="passwordNavItem">
+        <NavLink class="nav-link" id="passwordNavLink" href="Account/Manage/ChangePassword">Password</NavLink>
+    </li>
+    @if (hasExternalLogins)
+    {
+        <li class="nav-item" id="externalLoginsNavItem">
+            <NavLink class="nav-link" id="externalLoginsNavLink" href="Account/Manage/ExternalLogins">External logins</NavLink>
+        </li>
+    }
+
+    <li class="nav-item" id="personalDataNavItem">
+        <NavLink class="nav-link" id="personalDataNavLink" href="Account/Manage/PersonalData">Personal data</NavLink>
+    </li>
+</ul>
+
+
+<style>
+    .menu {
+        
+        border-bottom: 1px solid #333; 
+    }
+
+    .nav-pills .nav-link {
+        color: #333; 
+        border-radius: 25px;
+        margin: 5px;
+        background-color: #f8f9fa;
+    }
+
+        .nav-pills .nav-link.active {
+            background-color: #333;
+            color: #f8f9fa;
+        }
+</style>
+
+@code {
+    private bool hasExternalLogins;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+    }
+}

@@ -1,0 +1,61 @@
+﻿
+.container {
+    position: absolute;
+    width: 100%;
+    max-width: 1000px;
+    height: fit-content;    
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 1rem;
+    
+   
+}
+
+.profile {
+    align-items: center;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.logout-button {
+    border: none;
+    box-shadow: none;
+    border-radius: 5px;
+    height: 40px;
+    width: 100px;
+}
+
+    .logout-button:hover {
+        background-color: #FF0000;
+    }
+
+.logout-button:focus {
+    opacity: 0.8;
+    background: #FF5733;
+    box-shadow: none
+}
+
+.logout-button:active {
+    background: #682773;
+    box-shadow: none
+}
+
+.back:hover {
+    color: #682773;
+    cursor: pointer
+}
+
+.labels {
+    font-size: 11px
+}
+
+
+@media(max-width: 768px) {
+    .container {
+        margin-top: 0;
+        border-radius: 0;
+        margin-top: 0;
+        min-height: calc(100vh - 2.5rem);
+    }
+}
+

@@ -1,0 +1,124 @@
+﻿.admin-layout {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    height: fit-content;
+    min-height: 100vh;
+    gap: 2px;
+    overflow: hidden;
+    width: 100%;
+    z-index: 10;
+}
+
+.admin-layout aside {
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding-top: 1rem;
+    padding-inline: 1rem;
+    background-color: white;
+}
+
+.admin-layout main {
+    padding: 20px;
+    background-color: #f0f0f0;
+    overflow-y: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.admin-layout aside nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.admin-layout aside nav ul li {
+    padding: 5px;
+    margin-bottom: 10px;
+    background-color: #4d66907c;
+    box-shadow: 0 1px 1px -2px rgb(1, 1, 36);
+    transition: background-color 0.3s, border 0.3s;
+}
+
+.admin-layout aside nav ul li:hover {
+    border: solid 1px #ff6a00;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: black;
+    display: block;
+}
+
+.dropdown-button {
+    color: black;
+    border-radius: 50px;
+    background-color: #4d66907c;
+    width: 40px;
+    height: 40px;
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+}
+
+
+
+
+.sideDropmenu {
+    display: none;
+}
+
+.dropdown-items{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: start;
+    padding: 20px;
+    padding-bottom: 0px;    
+}
+
+.dropdown-items li {
+    list-style-type: none;
+    text-decoration: none;
+    color: white;
+}
+
+.dropdown-link {
+    color: white;
+    text-decoration: none;
+}
+
+@media (max-width: 768px) {
+    .admin-layout {
+        grid-template-columns: 1fr;
+        height: fit-content;
+        min-height: 100vh;
+    }
+
+    .admin-layout main {
+        margin-left: 0;
+        border-radius: 0;
+        height:fit-content;
+        min-height: 100vh;
+    }
+
+    .sideDropmenu {
+        display: flex;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        height: fit-content;
+        width: fit-content;
+        z-index: 100000;
+    }
+
+    .admin-layout aside {
+        display: none;
+    }
+
+    .dropdownContainer {
+        flex-direction: column;
+        position: fixed;
+        bottom: 4.5rem;
+        right: 1.5rem;
+        background-color: black;
+        border-radius: 20px;
+    }
+}

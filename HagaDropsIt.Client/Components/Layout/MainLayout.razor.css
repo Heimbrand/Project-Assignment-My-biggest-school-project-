@@ -1,0 +1,63 @@
+
+
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.Layout-container {
+    position: relative; 
+    background-image: url('Assets/Patterns/real_cf.png');
+    background-repeat: repeat;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    z-index: 1;
+}
+
+.Layout-container:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #030206;
+    background: linear-gradient(0deg, #030206, #131827);
+    opacity: 0.3;
+    z-index: 2;
+}
+
+.content {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 4.2rem;
+    z-index: 3;
+    overflow: auto;
+    margin-bottom: 20px;
+
+}
+
+
+@media(max-width: 768px) {
+    .content {
+        margin-block: 0;
+        margin-top: 1.5rem;
+    }
+
+   
+}

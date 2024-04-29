@@ -1,0 +1,202 @@
+﻿@page "/admin/products/edit/{ProductId:int}"
+
+@using HagaDropsIt.Client.Data
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@using HagaDropsIt.Client.Utils;
+@inject IProductService<ProductDto> ProductService
+@inject ICategoryService<CategoryDto> CategoryService
+@inject IGenreService<GenreDto> GenreService
+@inject NavigationManager NavigationManager
+@layout AdminLayout
+@inject ILogger<EditProduct> Logger
+@inject IBlobStorageServices BlobStorageService
+@inject IBlobTools BlobTools
+
+<div class=" container">
+    
+@if (EditProdut == null)
+{
+    <p>Loading product details...</p>
+}
+else
+{
+    <EditForm  Model="EditProdut" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="edit-form">
+                <div class=" product-name-title"><h3>@EditProdut.Name</h3></div>
+        <div class="img-and-uploader">
+            
+            <img class="product-image" src="@EditProdut.ImageURL" alt="@EditProdut.Name" />
+            <div class=" uploader-group">
+                <label class="uploader-label" for="imageFile">Product Image:</label>
+                    <InputFile class="uploader" id="imageFile" OnChange="HandleFileSelected" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <InputText id="name" class="form-control" @bind-Value="EditProdut.Name" required />
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <InputTextArea id="description" class="form-control" @bind-Value="EditProdut.Description" required />
+        </div>
+
+        <div class="form-group">
+            <label for="price">Price:</label>
+            <InputNumber id="price" class="form-control" @bind-Value="EditProdut.Price" required />
+        </div>
+
+        <div class="form-group">
+            <label for="categoryId">Category:</label>
+            <InputSelect id="categoryId" class="form-control" @bind-Value="EditProdut.CategoryId">
+                @foreach (var category in categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="form-group">
+            <label for="genreId">Genre:</label>
+            <InputSelect id="genreId" class="form-control" @bind-Value="EditProdut.GenreId">
+                @foreach (var genre in genres)
+                {
+                    <option value="@genre.Id">@genre.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="form-group">
+            <label for="PgRating">Pg rating</label>
+            <InputNumber id="PgRating" class="form-control" @bind-Value="EditProdut.PgRating" required />
+        </div>
+
+        <div class="form-group">
+            <label for="isOnSale">Is On Sale:</label>
+            <InputCheckbox id="isOnSale" class="form-check-input" @bind-Value="EditProdut.IsOnSale" />
+        </div>
+
+        <div class="form-group">
+            <label for="isNew">Is New:</label>
+            <InputCheckbox id="isNew" class="form-check-input" @bind-Value="EditProdut.IsNew" />
+        </div>
+
+        <div class="form-group">
+            <label for="IsInvisible">Dölj för kund?</label>
+            <InputCheckbox id="IsInvisible" class="form-check-input" @bind-Value="EditProdut.IsInvisible" />
+        </div>
+
+        <div class="form-group">
+            <label for="Discount">Rabatt i %</label>
+            Ingen implementation; kommer antagligen inte få det heller=)
+            <InputNumber id="Discount" class="form-control" @bind-Value="EditProdut.Discount" required />
+        </div>
+
+        <div class="form-group">
+            <label for="stock">Lager</label>
+            <InputNumber id="stock" class="form-control" @bind-Value="EditProdut.Stock" required />
+        </div>
+
+                <div class=" uploader-group">
+                    <label class="uploader-label" for="imageFile">Product Image:</label>
+                    <InputFile class="uploader" id="imageFile" OnChange="HandleFileSelected" />
+                </div>
+
+        <button type="submit" class="btn btn-success">Update Product</button>
+        <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+       </div>
+    </EditForm>
+}
+</div>
+
+@code {
+    [Parameter] public int ProductId { get; set; }
+    private ProductDto EditProdut { get; set; }
+    private List<CategoryDto> categories = new();
+    private List<GenreDto> genres = new();
+    private IBrowserFile? selectedFile;
+    private string productBlobContainer = "products";
+    private string releaseDateInput = DateTime.Now.ToString("yyyy-MM-dd");
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        EditProdut = await ProductService.GetProductById(ProductId);
+        if (EditProdut == null)
+        {
+            NavigationManager.NavigateTo("/admin/products");
+        }
+
+        categories = await CategoryService.GetAllCategories() as List<CategoryDto>;
+        genres = await GenreService.GetAllGenres() as List<GenreDto>;
+
+    }
+
+    private async Task OnValidSubmit()
+    {
+        if (DateTime.TryParse(releaseDateInput, out var releaseDate))
+        {
+            EditProdut.RealeaseDate = releaseDate;
+        }
+        else
+        {
+            Logger.LogError("Invalid release date format.");
+            return;
+        }
+        if (selectedFile != null)
+        {
+            string blobName = BlobTools.ExtractBlobNameFromUrl(EditProdut.ImageURL);
+            Logger.LogInformation("Existing blob name: {BlobName}", blobName);
+            if (!string.IsNullOrEmpty(blobName))
+            {
+                var blobExists = await BlobStorageService.BlobExistsAsync(productBlobContainer, blobName);
+                Logger.LogInformation("Blob exists: {BlobExists}", blobExists.Data);
+                if (blobExists.Success && blobExists.Data)
+                {
+                    var deleteResult = await BlobStorageService.DeleteBlobAsync(productBlobContainer, blobName);
+                    if (!deleteResult.Success)
+                    {
+                        Logger.LogWarning("Failed to delete existing blob: {BlobName}. Proceeding with update.", blobName);
+                    }
+                }
+            }
+
+            using var stream = selectedFile.OpenReadStream();
+            string newBlobName = BlobTools.GenerateBlobName(selectedFile.Name);
+            var uploadResult = await BlobStorageService.UploadBlobAsync(productBlobContainer, newBlobName, stream);
+            if (uploadResult.Success)
+            {
+                string cleanUrl = uploadResult.Data.Replace("\"", "").Trim();
+                EditProdut.ImageURL = cleanUrl;
+                Logger.LogInformation("Uploaded new blob: {BlobName}", cleanUrl);
+            }
+            else
+            {
+                Logger.LogError("Error uploading file: {ErrorMessage}", uploadResult.ErrorMessage);
+                
+            }
+        }
+        else
+        {
+            var defaultImageUrl = "/Assets/Images/haga.webp";
+            EditProdut.ImageURL = defaultImageUrl;
+        }
+
+        await ProductService.UpdateProduct(EditProdut);
+        Logger.LogInformation("Updated Product:", EditProdut.Name);
+        NavigationManager.NavigateTo("/admin/products");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/admin/products");
+    }
+}

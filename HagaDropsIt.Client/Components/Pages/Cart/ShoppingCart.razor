@@ -1,0 +1,333 @@
+﻿@page "/ShoppingCart"
+
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject ICartService<CartDto, CartItemDto> CartService
+@inject IOrderService<OrderDto> OrderService
+@inject ICustomerService<CustomerDto> CustomerService
+
+@using HagaDropsIt.Shared.Entities
+@using Microsoft.AspNetCore.Identity
+@using HagaDropsIt.Client.Services
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@using Microsoft.IdentityModel.Tokens
+@using System.Text
+@using Humanizer
+@using MongoDB.Driver.Linq
+
+<div id="shoppingCartCard" class="card">
+    <div class="row">
+        <div class="col-md-8 cart" id="cartDetails">
+            <div class="title" id="cartTitle">
+                <div class="row mt-2">
+                    <div class="col"><h4><b>Kundvagn</b></h4></div>
+                    <div class="col align-self-center text-right text-muted" id="itemCount"> <strong>You have @(CartProducts.Count + CartEvents.Count) items in your cart</strong></div>
+
+                </div>
+            </div>
+            @if (CartItems is not null)
+            {
+                @foreach (var cartItem in CartItems)
+                {
+                    @if (cartItem.Event != null)
+                    {
+                        <div class="row border-top border-bottom" id="@cartItem.Event.Id">
+                            <div class="row main align-items-center">
+                                <div class="col-2"><img class="img-fluid" src="@cartItem.Event.ImageURL"></div>
+                                <div class="col">
+
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row"><strong>@cartItem.Event.Name</strong></div>
+                                            <div class="row">Price: @cartItem.Event.Price</div>
+                                        </div>
+                                    </div>
+                                    <div class="col" id="quantitySelector1">
+                                    </div>
+                                    <div class="col">@cartItem.Event.Price kr <button class="close btn btn-danger" @onclick="() => RemoveCartItem(cartItem.Id)">Remove from cart</button></div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if (cartItem.Product != null)
+                    {
+                        <div class="row border-top border-bottom" id="@cartItem.Product.Id">
+                            <div class="row main align-items-center">
+                                <div class="col-2"><img class="img-fluid" src="@cartItem.Product.ImageURL"></div>
+                                <div class="col">
+
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row"><strong>@cartItem.Product.Name</strong></div>
+                                            <div class="row">Price: @cartItem.Product.Price</div>
+                                        </div>
+                                    </div>
+                                    <div class="col" id="quantitySelector1">
+                                    </div>
+                                    <div class="col">@cartItem.Product.Price kr <button class="close btn btn-danger" @onclick="() => RemoveCartItem(cartItem.Id)">Remove from cart</button></div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+
+            <div class="back-to-shop" id="backToShop">
+                <button type="button" class="btn-dark" @onclick="() => BackToStore()">Back to store</button>
+            </div>
+        </div>
+        <div class="col-md-4 summary" id="summarySection">
+            <button class="btn" id="checkoutButton" @onclick="Refresh">Refresh page</button>
+            <div><h5><b>Översikt</b></h5></div>
+            <hr>
+            <div class="row" id="summaryItems">
+                <div class="col" style="padding-left:0;">@(CartProducts.Count + CartEvents.Count) items</div>
+                <div class="col text-right">@(CartProducts.Sum(p => p.Price) + CartEvents.Sum(c => c.Price)) kr</div>
+            </div>
+            <form id="checkoutForm">
+                <p>FRAKT</p>
+                <select id="shippingOption">
+                    <option class="text-muted">Click and Collect</option>
+                </select>
+
+            </form>
+            <div class="row" id="totalPriceSection" style="border-top: 1px solid rgba(0,0,0,.1); padding: 2vh 0;">
+                <div class="col">TOTALT PRIS</div>
+                <div class="col text-right">@(CartProducts.Sum(p => p.Price) + CartEvents.Sum(c => c.Price)) kr</div>
+            </div>
+            <button class="btn" id="checkoutButton" @onclick="NavigateToCheckout" disabled="true">Checkout</button>
+
+            <button class="btn" id="ClickAndCollect" @onclick=" () => ClickAndCollect()">Click And collect in store!</button>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private ApplicationUser user = new();
+    private CustomerDto customer = new();
+    public List<Product> CartProducts { get; set; } = new();
+    public List<Event> CartEvents { get; set; } = new();
+    public List<Event> CartEventsToBecomeOrderItem { get; set; } = new();
+    public List<Product> CartProductsToBecomeOrderItem { get; set; } = new();
+    public List<OrderItem> OrderItems { get; set; } = new();
+    public Random random = new Random();
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    public IEnumerable<CartItemDto>? CartItems { get; set; } = new List<CartItemDto>();
+
+    private void Refresh()
+    {
+        NavigationManager.NavigateTo("/ShoppingCart", true);
+    }
+
+
+
+    private void NavigateToCheckout()
+    {
+        var uri = NavigationManager.GetUriWithQueryParameters("/checkout", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl });
+        NavigationManager.NavigateTo(uri);
+    }
+
+    private void BackToStore()
+    {
+        NavigationManager.NavigateTo("/store");
+    }
+
+
+
+    private void ClickAndCollect()
+    {
+        if (CartItems is null)
+        {
+            return;
+        }
+
+        foreach (var cartItem in CartItems)
+        {
+            if (cartItem.Event is not null)
+            {
+                var orderItem = new OrderItemDto()
+                    {
+                        Event = new Event()
+                        {
+                            Id = cartItem.Event.Id,
+                            Name = cartItem.Event.Name,
+                            Description = cartItem.Event.Description,
+                            ImageURL = cartItem.Event.ImageURL,
+                            Price = cartItem.Event.Price,
+                            AgeRestriction = cartItem.Event.AgeRestriction
+                        },
+                        EventQuantity = cartItem.Quantity,
+                        ProductQuantity = 0
+                    };
+                CartEventsToBecomeOrderItem.Add(orderItem.Event);
+            }
+
+            if (cartItem.Product is not null)
+            {
+                var orderItem = new OrderItemDto()
+                    {
+                        Product = new Product()
+                        {
+                            Id = cartItem.Product.Id,
+                            Name = cartItem.Product.Name,
+                            Description = cartItem.Product.Description,
+                            ImageURL = cartItem.Product.ImageURL,
+                            Price = cartItem.Product.Price,
+                            Stock = cartItem.Product.Stock
+                        },
+                        EventQuantity = 0,
+                        ProductQuantity = cartItem.Quantity
+                    };
+                CartProductsToBecomeOrderItem.Add(orderItem.Product);
+            }
+        }
+        // CartProductsToBecomeOrderItem = user.Cart.Products;
+        // CartEventsToBecomeOrderItem = user.Cart.Events;
+
+        var cartItemsToOrderItem = new List<OrderItem>();
+        foreach (var cartEvent in CartEventsToBecomeOrderItem)
+        {
+            var orderItem = new OrderItem()
+                {
+                    Event = new Event()
+                    {
+                        Id = cartEvent.Id,
+                        Name = cartEvent.Name,
+                        Description = cartEvent.Description,
+                        ImageURL = cartEvent.ImageURL,
+                        Price = cartEvent.Price,
+                        AgeRestriction = cartEvent.AgeRestriction
+                    },
+                    EventQuantity = 1,
+                    ProductQuantity = 0
+                };
+
+            cartItemsToOrderItem.Add(orderItem);
+        }
+
+        foreach (var cartProduct in CartProductsToBecomeOrderItem)
+        {
+            var orderItem = new OrderItem()
+                {
+                    Product = new Product()
+                    {
+                        Id = cartProduct.Id,
+                        Name = cartProduct.Name,
+                        Description = cartProduct.Description,
+                        ImageURL = cartProduct.ImageURL,
+                        Price = cartProduct.Price,
+                        Stock = cartProduct.Stock
+                    },
+                    EventQuantity = 0,
+                    ProductQuantity = 1
+                };
+
+            cartItemsToOrderItem.Add(orderItem);
+        }
+
+        var totalProductAmount = CartProductsToBecomeOrderItem.Sum(x => x.Price);
+        var totalEventAmount = CartEventsToBecomeOrderItem.Sum(x => x.Price);
+
+        var orderNumber = random.Next(100000, 999999);
+        var cartToOrder = new OrderDto()
+            {
+
+                OrderNumber = Convert.ToString(orderNumber),
+                CustomerGuid = user.Cart.UserGuid,
+                BuyerEmail = user.UserName,
+                Products = cartItemsToOrderItem,
+                TotalAmount = totalProductAmount + totalEventAmount,
+                OrderDate = DateTime.Now,
+            };
+
+
+        foreach (var cartItem in CartItems)
+        {
+            CartService.RemoveCartItemFromCart(user.Cart.Id, cartItem.Id);
+        }
+
+        OrderService.AddOrder(cartToOrder);
+
+        NavigationManager.NavigateTo("/ClickAndCollectConfirmation");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (!authState.User.Identity.IsAuthenticated)
+        {
+            if (customer is null)
+            {
+                return;
+            }
+
+            if (customer.Cart.Id == 0)
+            {
+
+               
+                var customerCart = await CartService.GetCartByUserGuid(customer.CustomerGuid);
+                customer.Cart.Id = customerCart.Id;
+                customer.Cart.UserGuid = customerCart.UserGuid;
+                customer.Cart.CartItems = customerCart.CartItems.Select(dto =>
+                    new CartItem
+                        {
+                            Id = dto.Id,
+                            Product = dto.Product,
+                            Event = dto.Event,
+                            Quantity = dto.Quantity
+                        }).ToList();
+            }
+            CartItems = await CartService.GetCartItemsByCartId(customer.Cart.Id);
+        }
+        else
+        {
+            user = await UserManager.GetUserAsync(authState.User);
+
+            if (user is null)
+            {
+                return;
+            }
+
+            if (user.Cart is null)
+            {
+                user.Cart = new Cart();
+                var userCart = await CartService.GetCartByUserGuid(Guid.Parse(user.Id));
+                user.Cart.Id = userCart.Id;
+                user.Cart.UserGuid = userCart.UserGuid;
+                user.Cart.CartItems = userCart.CartItems.Select(dto =>
+                    new CartItem
+                        {
+                            Id = dto.Id,
+                            Product = dto.Product,
+                            Event = dto.Event,
+                            Quantity = dto.Quantity
+                        }).ToList();
+            }
+
+            CartItems = await CartService.GetCartItemsByCartId(user.Cart.Id);
+
+            StateHasChanged();
+        }
+
+
+    }
+
+    private async Task RemoveProduct(int productId)
+    {
+        await CartService.RemoveProductFromCart(user.Cart.Id, productId);
+        CartProducts.RemoveAll(p => p.Id == productId);
+        StateHasChanged();
+    }
+
+    private async Task RemoveCartItem(int cartItemId)
+    {
+        await CartService.RemoveCartItemFromCart(user.Cart.Id, cartItemId);
+        CartItems = await CartService.GetCartItemsByCartId(user.Cart.Id);
+        StateHasChanged();
+    }
+}

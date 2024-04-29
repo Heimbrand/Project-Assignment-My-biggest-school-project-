@@ -1,0 +1,48 @@
+﻿@media (max-width: 768px) {
+    .wrapper {
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        height: 100vh; 
+        margin: 0;
+        flex-direction: column; 
+    }
+
+    .corpus {
+        width: 90%; 
+        max-width: 600px; 
+        margin: auto; 
+        padding: 1rem;
+        box-sizing: border-box; 
+        background: none !important;
+    }
+}
+
+.wrapper {
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: fit-content;
+    max-width: 1000px;
+    width: 100%;
+    border-radius: 1rem;
+    padding: 0;
+    margin: 5rem auto;
+}
+
+.corpus {
+    margin: auto;
+    padding: 1rem;
+    width: 100%;
+    max-width: 600px;
+}
+
+.checkbox{
+    color:white;
+    margin-top: 2rem;
+   
+}
+.title{
+    margin-bottom: 1rem;
+    color:white;
+}}

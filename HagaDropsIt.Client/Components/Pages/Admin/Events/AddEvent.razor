@@ -1,0 +1,134 @@
+﻿@page "/admin/events/add"
+@using HagaDropsIt.Client.Services
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@using HagaDropsIt.Client.Utils;
+@using Microsoft.Extensions.Logging
+@inject ILogger<EditEvent> Logger
+@inject IEventService<EventDto> EventService
+@inject NavigationManager NavigationManager
+@inject IBlobStorageServices BlobStorageService
+@inject IBlobTools BlobTools
+@layout AdminLayout
+
+<div class="card container">
+    <h3>Add New Event</h3>
+
+    <EditForm Model="newEvent" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="name">Event Namn:</label>
+            <InputText id="name" class="form-control" @bind-Value="newEvent.Name" />
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <InputTextArea id="description" class="form-control" @bind-Value="newEvent.Description" />
+        </div>
+
+        <div class="form-group">
+            <label for="startDate">Startdatum:</label>
+            <InputText id="startDate" class="form-control" @bind-Value="startDateInput" />
+        </div>
+        <div class="form-group">
+            <label for="endDate">Slutdatum:</label>
+            <InputText id="endDate" class="form-control" @bind-Value="endDateInput" />
+        </div>
+
+
+      
+
+        <div class="form-group">
+            <label for="location">Plats:</label>
+            <InputText id="location" class="form-control" @bind-Value="newEvent.Location" />
+        </div>
+
+        <div class="form-group">
+            <label for="price">Pris:</label>
+            <InputNumber id="price" class="form-control" @bind-Value="newEvent.Price" />
+        </div>
+
+        <div class="form-group">
+            <label for="imageFile">Event Image:</label>
+            <InputFile id="imageFile" OnChange="HandleFileSelected" />
+        </div>
+        <div class="form-group">
+            <label for="price">Åldersgräns:</label>
+            <InputNumber id="price" class="form-control" @bind-Value="newEvent.AgeRestriction" />
+        </div>
+
+
+        <button type="submit" class="btn btn-primary">Add Event</button>
+        <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+    </EditForm>
+</div>
+@code {
+    private EventDto newEvent = new();
+    private string eventsBlobContainer = "events";
+    private IBrowserFile? selectedFile;
+    private string startDateInput; 
+    private string endDateInput; 
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+
+    private async Task OnValidSubmit()
+    {
+        if (selectedFile != null)
+        {
+            if (DateTime.TryParse(startDateInput, out var startDate))
+            {
+                newEvent.StartDate = startDate;
+            }
+            else
+            {
+                Logger.LogError("Invalid start date format.");
+                return;
+            }
+
+            if (DateTime.TryParse(endDateInput, out var endDate))
+            {
+                newEvent.EndDate = endDate;
+            }
+            else
+            {
+                Logger.LogError("Invalid end date format.");
+                return;
+            }
+
+            using var stream = selectedFile.OpenReadStream();
+            string newBlobName = BlobTools.GenerateBlobName(selectedFile.Name);
+            var uploadResult = await BlobStorageService.UploadBlobAsync(eventsBlobContainer, newBlobName, stream);
+            if (uploadResult.Success)
+            {
+                string cleanUrl = uploadResult.Data.Replace("\"", "").Trim();
+                newEvent.ImageURL = cleanUrl;
+                Logger.LogInformation("Uploaded new blob: {BlobName}", cleanUrl);
+            }
+            else
+            {
+                Logger.LogError("Error uploading file: {ErrorMessage}", uploadResult.ErrorMessage);
+                return;
+            }
+        }
+        else
+        {
+            var defaultImageUrl = "/Assets/Images/haga.webp";
+            newEvent.ImageURL = defaultImageUrl;
+        }
+
+        await EventService.AddEvent(newEvent);
+        Logger.LogInformation("Added event: {EventId}", newEvent.Name);
+        NavigationManager.NavigateTo("/admin/events");
+
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/admin/events");
+    }
+}

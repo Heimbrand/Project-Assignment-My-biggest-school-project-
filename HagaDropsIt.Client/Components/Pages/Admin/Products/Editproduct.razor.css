@@ -1,0 +1,112 @@
+﻿.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.title h3 {
+    color: #333;
+}
+
+.img-and-uploader {
+    display: flex;
+    flex-direction: column-reverse; 
+    gap: 1rem;
+    background-color: #e9ecef;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.product-image {
+    width: 100%; 
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.uploader-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    justify-content: end;
+  
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+    .form-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+.form-control, .form-check-input {
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 10px 20px;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    flex-grow: 1;
+    margin: 2px;
+}
+
+.btn-success {
+    background-color: #28a745;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
+
+@media (min-width: 768px) {
+    .img-and-uploader {
+        flex-direction: row; 
+    }
+
+    .product-image {
+        width: 40%;
+    }
+
+    .form-group {
+        flex-direction: row;
+        align-items: center;
+    }
+
+        .form-group label {
+            flex-basis: 20%;
+        }
+
+    .form-control, .form-check-input {
+        flex-grow: 1;
+    }
+
+    .buttons {
+        justify-content: space-around;
+    }
+}

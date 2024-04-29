@@ -1,0 +1,175 @@
+﻿
+.hero-section {
+   
+    height: 85vh;
+    display: flex;
+    justify-content: start;
+    align-items: start;
+    flex-direction: row;
+    position: fixed;
+    width: 100%;
+    border: none;
+    top: 4.1rem;
+    box-shadow: 0px 10px 10px -5px rgb(1, 1, 36);
+    gap: 0px;
+    
+    border-bottom: solid 1px #ff6a00;
+   
+}
+
+.column {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+    border: none;
+    height: 100%;
+    flex: 1;
+    transition: flex 1s ease, opacity 1s ease;
+    position: relative;
+    overflow: hidden;    
+   padding-block: 0;
+}
+
+.expanded {
+    flex: 10;
+}
+
+.column img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    transition: transform .5s ease;
+    padding: 0;
+    z-index: 1; 
+}
+
+
+
+@media (max-width: 768px) {
+    .hero-section {
+        display: none;
+    }
+
+    .hero-section-carousel {
+        display: block;
+        height: 100vh;
+        width: 100%;
+        position: fixed;
+    }
+
+    .column, .column.expanded {
+        flex: 1;
+    }
+}
+
+
+
+.event-description{
+    color: white;    
+    width: fit-content;
+    margin-bottom: 10px;
+}
+.event-title {
+    font-size: 50px; 
+    color:white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5); 
+    font-weight: bold; 
+    border-radius: 8px; 
+    margin-bottom: 15px; 
+   
+}
+
+.carousel-text {
+    position: absolute;  
+    bottom: 25%;
+    width: fit-content;
+    height: auto;
+    object-fit: cover;
+    transition: transform .5s ease;
+    margin-left: 4rem;
+    max-width: 90%;
+    text-align: start;
+    padding: 10px;
+    border-radius: 20px;
+    z-index: 1;
+}
+
+.carousel-text:before {
+    filter:blur(100px)
+}
+
+
+.carousel-inner, .carousel-item {
+    height: 100%;
+    position: relative;
+}
+
+.carousel-item {
+    transition: transform 0.5s ease-in-out; 
+}
+
+    .carousel-item.active {
+        opacity: 1; 
+    }
+
+
+@media (max-width: 768px) {
+
+    .carousel-text-mobile {
+        position: absolute;
+        bottom:33%;      
+        width: 100%;
+        color: white; 
+        padding: 10px;
+        border-radius: 0; 
+        text-align: start; 
+    }
+    .event-title{
+        font-size: 30px;
+    }
+
+    .carousel-text-mobile .event-title,
+    .carousel-text-mobile .event-description,
+    .carousel-text-mobile .event-location,
+    .carousel-text-mobile .event-price,
+    .carousel-text-mobile .event-age-restriction {
+        color: white;
+        margin: 5px 0;
+    }
+}
+
+.hidden {
+    display: none;
+}
+
+.visible {
+    display: block; 
+}
+
+.read-more {
+    color: cornflowerblue;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: .8rem;
+    
+}
+
+.read-more:hover {
+    background-color: orange;
+    color: black;
+    padding: 5px;
+    border-radius: 5px;
+
+}
+
+.event-date {
+    margin-bottom: 5px;
+    color: white;
+    border: solid 1px white;
+}

@@ -1,0 +1,67 @@
+﻿@inherits LayoutComponentBase
+@layout AccountLayout
+@using HagaDropsIt.Client.Data
+@using HagaDropsIt.Shared.Entities
+@using Microsoft.AspNetCore.Identity
+
+@inject NavigationManager NavigationManager
+@inject UserManager<ApplicationUser> UserManagers
+
+
+
+<AuthorizeView>
+    <div class="card container bg-white" id="userProfileCard">
+        <div class="row">
+            <div class="col-md-4 profile border-right" id="profileSection">
+                <div class="d-flex flex-column align-items-center text-center" id="profileInfo">
+                    <img class="rounded-circle" width="150px" src="https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg" id="profileImage">
+                    <span class="font-weight-bold" id="userName">@context.User.Identity?.Name!</span>
+                    <form action="Account/Logout" method="post" id="logoutForm">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                        <button type="submit" class="btn mt-4 logout-button btn-danger" id="logoutButton">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-8 border-right" id="contentSection">
+                <div class="col" id="navMenuContainer">
+                    <div id="manageNavMenuContainer">
+                        <ManageNavMenu />
+                    </div>
+                    <div class="my-4" id="bodyContent">
+                        @Body
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</AuthorizeView>
+
+@code {
+    private string? currentUrl;
+    private ApplicationUser user = default!;
+    private string? email;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+        
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+   
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

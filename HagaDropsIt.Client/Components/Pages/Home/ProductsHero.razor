@@ -1,0 +1,177 @@
+﻿@inject IJSRuntime JSRuntime
+@inject IProductService<ProductDto> ProductService
+@inject IGenreService<GenreDto> GenreService
+@inject ICategoryService<CategoryDto> CategoryService
+@inject ICartService<CartDto, CartItemDto> CartService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManagers
+@inject NavigationManager NavigationManager
+
+@using HagaDropsIt.Client.Services
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Entities
+@using HagaDropsIt.Shared.Interfaces
+@using Microsoft.AspNetCore.Identity
+@implements IDisposable
+
+<div id="productCarousel" class="carousel slide " data-bs-ride="carousel">
+    <div class="carousel-inner">
+        @for (int i = 0; i < products.Count; i += itemsPerSlide)
+        {
+            <div class="carousel-item @(i == 0 ? "active" : "")">
+                <div class="d-flex justify-content-center">
+                    @for (int j = i; j < i + itemsPerSlide && j < products.Count; j++)
+                    {
+                        <div class="card" @onclick="() => ViewProductDetails(products[j].Id)">
+                            <div class="product-details" @onclick="() => ViewProductDetails(products[j].Id)">
+                                <img src="@products[j].ImageURL" class="card-img-top" alt="@products[j].Name">                          
+                                    @if (products[j].IsOnSale)
+                                    {
+                                        <div class="banner on-sale">On Sale!</div>                                }                              
+                        
+                                <div class="card-body">
+                                    
+                                    <h5 class="product-name">@products[j].Name</h5>
+                                    @if (products[j].IsNew)
+                                    {
+                                        <div class="banner new-product">New release!</div>
+                                    }
+                                    <p class="product-description">@products[j].Description</p>
+                                </div>
+                            </div>
+                            <div class="product-footer">
+                                <span class="price" >$@products[j].Price</span>
+                                <button @onclick="() => AddToCart(products[j])" class="button add-to-cart">Add to Cart</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+
+@code {
+
+    private int itemsPerSlide = 4;
+    private List<ProductDto> products = new();
+    private ApplicationUser user = new ApplicationUser();
+
+
+    private async Task AddToCart(ProductDto product)
+    {
+        // user.Cart.Products ??= new List<Product>();
+        user.Cart.CartItems ??= new List<CartItem>();
+        var cartItem = new CartItemDto
+        {
+            Product = new Product
+            {
+                Id = product.Id,
+                CategoryId = product.CategoryId,
+                GenreId = product.GenreId,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                ImageURL = product.ImageURL,
+                PgRating = product.PgRating,
+                IsOnSale = product.IsOnSale,
+                IsNew = product.IsNew,
+                IsInvisible = product.IsInvisible,
+                Discount = product.Discount,
+                Stock = product.Stock,
+                RealeaseDate = product.RealeaseDate
+            },
+            Quantity = 1
+        };
+
+        await CartService.AddProductToCart(user.Cart.Id, cartItem);
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allProducts = await ProductService.GetAllProducts();
+        products.AddRange(allProducts.Where(p => p.IsOnSale || p.IsNew));
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (!authState.User.Identity.IsAuthenticated)
+        {
+            return;
+        }
+
+        user = await UserManagers.GetUserAsync(authState.User);
+
+        if (user is null)
+        {
+            return;
+        }
+
+        if (user.Cart is null)
+        {
+            user.Cart = new Cart();
+            var userCart = await CartService.GetCartByUserGuid(Guid.Parse(user.Id));
+            user.Cart.Id = userCart.Id;          
+            user.Cart.UserGuid = userCart.UserGuid;
+            user.Cart.CartItems = userCart.CartItems.Select(dto =>
+                new CartItem
+                    {
+                        Product = dto.Product,
+                        Event = dto.Event
+                    }).ToList();
+        }
+
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("setupCarouselAdjustment", DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public async Task AdjustItemsPerSlide(int viewportWidth)
+    {
+        if (viewportWidth < 576)
+        {
+            itemsPerSlide = 2;
+        }
+        else if (viewportWidth >= 576 && viewportWidth < 768)
+        {
+            itemsPerSlide = 2;
+        }
+        else if (viewportWidth >= 768 && viewportWidth < 992)
+        {
+            itemsPerSlide = 3;
+        }
+        else
+        {
+            itemsPerSlide = 4;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        JSRuntime.InvokeVoidAsync("cleanupCarouselAdjustment");
+    }
+
+    private async Task ViewProductDetails(int productId)
+    {
+        var url = $"/product/details/{productId}";
+        NavigationManager.NavigateTo(url);
+    }
+}
+
+

@@ -1,0 +1,70 @@
+﻿@page "/admin/events"
+@using HagaDropsIt.Client.Data
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@inject IEventService<EventDto> EventService
+@inject NavigationManager NavigationManager
+@layout AdminLayout
+
+<div class="container">
+    <div class=" title">
+        <h3>Events</h3>
+
+        <button class="btn btn-primary addbtn" @onclick="AddNewEvent">Add New Event</button>
+    </div>
+    <div class="event-catalog">
+        <div class="grid">
+            @foreach (var eventDto in events)
+            {
+                <div class="event-card
+                ">
+                    <img src="@eventDto.ImageURL" alt="@eventDto.Name" />
+
+                    <div class="event-details">
+                        <h3>@eventDto.Name</h3>
+                        <p>@eventDto.Description</p>
+                        <span>Date: @eventDto.StartDate</span>
+                        <span>Price: @eventDto.Price</span>
+                    </div>
+                    <div class="buttons">
+                        <button class="btn btn-secondary" @onclick="() => EditEvent(eventDto)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteEvent(eventDto.Id)">Delete</button>
+                    </div>        
+                </div>   
+            }
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private List<EventDto> events = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = (await EventService.GetAllEvents()).ToList();
+        foreach (var eventDto in events)
+        {
+            Console.WriteLine(eventDto.ImageURL);
+        }
+        
+    }
+
+    private void EditEvent(EventDto eventDto)
+    {
+        NavigationManager.NavigateTo($"/admin/events/edit/{eventDto.Id}");
+    }
+
+    private void DeleteEvent(int eventId)
+    {
+        NavigationManager.NavigateTo($"/admin/events/delete/{eventId}");
+        
+    }
+  
+
+    private void AddNewEvent()
+    {
+        NavigationManager.NavigateTo("/admin/events/add");
+    }
+}

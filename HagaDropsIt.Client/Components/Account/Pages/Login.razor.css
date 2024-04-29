@@ -1,0 +1,58 @@
+﻿@media (max-width: 768px) {
+    .wrapper {
+        display: flex;
+        align-items: center; 
+        justify-content: center;
+        height: 100vh; 
+        margin: 0;
+        flex-direction: column; 
+    }
+
+    .corpus {
+        width: 90%; 
+        max-width: 600px;
+        margin: auto; 
+        padding: 1rem;
+        box-sizing: border-box; 
+        background: none !important;
+    }
+}
+
+.wrapper {
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: fit-content;
+    max-width: 1000px;
+    width: 100%;
+    border-radius: 1rem;
+    padding: 0;
+    margin: 5rem auto;
+    color: white;
+    
+}
+.corpus {
+    margin: auto;
+    padding: 1rem;
+    width: 100%;
+    max-width: 600px;
+}
+
+.options {
+
+    text-decoration: none;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    text-align: center;
+
+}
+
+#Forgotyourpassword, #AccountRegister, #ResendEmailConfirmation{
+    color: dodgerblue;
+   
+    font-size: .94rem;
+    
+}
+

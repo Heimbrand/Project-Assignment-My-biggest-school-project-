@@ -1,0 +1,35 @@
+﻿.checkout {
+    position: absolute;
+    width: 100%;
+    max-width: 1000px;
+    height: fit-content;
+    left: 50%;
+    transform: translateX(-50%);
+      
+}
+
+.card {
+    height: fit-content;
+    max-width: 1000px;
+    width: 100%;
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 1rem;
+    border: transparent;
+    padding: 0;
+    margin-inline: auto;
+    margin-top: 1rem;
+}
+
+
+.CheckoutBody{
+   margin-block: 2rem;
+
+}
+
+@media (max-width: 768px) {
+    .card {
+        
+        margin-top: 0 !important;
+        border-radius: 0;
+    }
+}

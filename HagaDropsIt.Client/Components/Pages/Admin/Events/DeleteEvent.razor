@@ -1,0 +1,73 @@
+﻿@page "/admin/events/delete/{EventId:int}"
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@using HagaDropsIt.Client.Utils;
+@inject ILogger<EditEvent> Logger
+@inject IEventService<EventDto> EventService
+@inject NavigationManager NavigationManager
+@inject IBlobStorageServices BlobStorageService
+@inject IBlobTools BlobTools
+@layout AdminLayout
+
+<div class="container">
+<h3>Delete Event</h3>
+
+@if (eventToDelete != null)
+{
+    <div class="delete-confirmation">
+        <p>Are you sure you want to delete the following event?</p>
+        <div class="event-details">
+            <h4>@eventToDelete.Name</h4>
+            <p>@eventToDelete.Description</p>
+            <p>Date: @eventToDelete.StartDate.ToShortDateString()</p>
+            <p>Location: @eventToDelete.Location</p>
+        </div>
+        <div class="buttons">
+            <button class="btn btn-danger" @onclick="ConfirmDeletion">Delete Event</button>
+            <button class="btn btn-secondary" @onclick="CancelDeletion">Cancel</button>
+        </div>
+    </div>
+}
+
+else
+{
+    <p>Loading event details...</p>
+}
+</div>
+
+@code {
+    [Parameter] public int EventId { get; set; }
+    private EventDto eventToDelete = new();
+    private string eventsBlobContainer = "events";
+
+    protected override async Task OnInitializedAsync()
+    {
+        eventToDelete = await EventService.GetEventById(EventId);
+    }
+
+    private async Task ConfirmDeletion()
+    {
+        string blobName = BlobTools.ExtractBlobNameFromUrl(eventToDelete.ImageURL);
+        Logger.LogInformation("Existing blob name: {BlobName}", blobName);
+        if (!string.IsNullOrEmpty(blobName))
+        {
+            var blobExists = await BlobStorageService.BlobExistsAsync(eventsBlobContainer, blobName);
+            Logger.LogInformation("Blob exists: {BlobExists}", blobExists.Data);
+            if (blobExists.Success && blobExists.Data)
+            {
+                var deleteResult = await BlobStorageService.DeleteBlobAsync(eventsBlobContainer, blobName);
+                if (!deleteResult.Success)
+                {
+                    Logger.LogWarning("Failed to delete existing blob: {BlobName}. Proceeding with update.", blobName);
+                }
+            }
+        }
+        await EventService.DeleteEvent(EventId);
+        NavigationManager.NavigateTo("/admin/events");
+    }
+
+    private void CancelDeletion()
+    {
+        NavigationManager.NavigateTo("/admin/events");
+    }
+}

@@ -1,0 +1,169 @@
+﻿@page "/Account/Manage"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using HagaDropsIt.Client.Data
+@using HagaDropsIt.Client.Services
+@using HagaDropsIt.Shared.Entities
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+
+
+
+<PageTitle>Profile</PageTitle>
+
+<h3 id="Profile">Profile</h3>
+<StatusMessage />
+
+<div class="row">
+    <div class="col-md-6">
+        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <input type="text" value="@username" class="form-control" placeholder="Please choose your username." disabled />
+                <label for="username" class="form-label">Username</label>
+            </div> 
+            <div class="form-floating mb-3">
+                <InputText id="InputNickname" @bind-Value="Input.Nickname" class="form-control" placeholder="Please enter your Nickname." />
+                <label for="Nickname" class="form-label">Nickname</label>
+                <ValidationMessage For="() => Input.Nickname" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText id="InputFirstName" @bind-Value="Input.FirstName" class="form-control" placeholder="Please enter your first name." />
+                <label for="first-name" class="form-label">First name</label>
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText id="InputLastName" @bind-Value="Input.LastName" class="form-control" placeholder="Please enter your last name." />
+                <label for="last-name" class="form-label">Last name</label>
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputDate id="InputDateOfBirth" @bind-Value="Input.DateOfBirth" class="form-control" />
+                <label for="date-of-birth" class="form-label">Date of birth</label>
+                <ValidationMessage For="() => Input.DateOfBirth" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText id="InputPhoneNumber" @bind-Value="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
+                <label for="phone-number" class="form-label">Phone number</label>
+                <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText id="InputAdress" @bind-Value="Input.Adress" class="form-control" placeholder="Please enter your adress." />
+                <label for="adress" class="form-label">Adress</label>
+                <ValidationMessage For="() => Input.Adress" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText id="InputZip" @bind-Value="Input.Zip" class="form-control" placeholder="Please enter your zip." />
+                <label for="zip" class="form-label">Zip</label>
+                <ValidationMessage For="() => Input.Zip" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText id="InputCity" @bind-Value="Input.City" class="form-control" placeholder="Please enter your city." />
+                <label for="city" class="form-label">City</label>
+                <ValidationMessage For="() => Input.City" class="text-danger" />
+            </div>
+           
+            <button id="saveProfile" type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private ApplicationUser user = default!;
+    private ApplicationUser updateUser { get; set; }
+    private string? username;
+    public string? FirstName;
+    public string? LastName;
+    public DateOnly DateOfBirth;
+    private string? PhoneNumber;
+    private string? adress;
+    private string? zip;
+    private string? City;
+    private string? Nickname;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+  
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        username = await UserManager.GetUserNameAsync(user);
+        PhoneNumber = await UserManager.GetPhoneNumberAsync(user);
+        Input.PhoneNumber ??= PhoneNumber;
+
+        Input.Adress ??= user.Adress;
+        Input.Zip ??= user.Zip;
+        Input.City ??= user.City;
+        Input.FirstName ??= user.FirstName;
+        Input.LastName ??= user.LastName;
+        Input.DateOfBirth = user.DateOfBirth;
+        Input.Nickname ??= user.Nickname;
+        
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (Input.PhoneNumber != PhoneNumber)
+        {
+            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
+            if (!setPhoneResult.Succeeded)
+            {
+                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
+            }
+        }
+
+       
+       user.FirstName = Input.FirstName;
+       user.LastName = Input.LastName;
+       user.DateOfBirth = Input.DateOfBirth;
+       user.Adress = Input.Adress;
+       user.Zip = Input.Zip;
+       user.City = Input.City;
+       user.Nickname = Input.Nickname;
+
+        await UserManager.UpdateAsync(user);
+          
+        
+
+        await SignInManager.RefreshSignInAsync(user);
+        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+    }
+
+    private sealed class InputModel
+    {
+        [Phone]
+        [Display(Name = "Phone number")]
+        public string? PhoneNumber { get; set; }
+    
+        [Display(Name = "First name")]
+        public string? FirstName { get; set; }
+
+        [Display(Name = "Last name")]
+        public string? LastName { get; set; }
+
+        [Display(Name = "Date of birth")]
+        public DateOnly DateOfBirth { get; set; }
+
+        [Display(Name = "Adress")]
+        public string? Adress { get; set; }
+
+        [Display(Name = "Zip")]
+        public string? Zip { get; set; }
+
+        [Display(Name = "City")]
+        public string? City { get; set; }
+
+        [Display(Name = "Nickname")]
+        public string? Nickname { get; set; }
+    }
+}

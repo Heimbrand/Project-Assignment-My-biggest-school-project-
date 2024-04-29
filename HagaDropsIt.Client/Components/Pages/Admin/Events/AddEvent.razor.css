@@ -1,0 +1,135 @@
+﻿
+.container {
+    max-width: 500px;
+    margin: 0rem auto;
+    padding: 1rem;
+    border-radius: 20px;
+}
+
+.admin-layout {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+input[type="text"],
+input[type="date"],
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 3px #ddd;
+    transition: border-color 0.2s;
+}
+
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    textarea:focus {
+        border-color: #80bdff;
+        outline: none;
+    }
+
+input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+
+button.btn {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+    button.btn:hover {
+        background-color: #0056b3;
+    }
+
+button.btn-primary {
+    background-color: #0069d9;
+    border-color: #0062cc;
+}
+
+    button.btn-primary:hover {
+        background-color: #005cbf;
+        border-color: #0056b3;
+    }
+
+
+@media (max-width: 768px) {
+    .admin-layout {
+        padding: 10px;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    textarea {
+        padding: 8px;
+    }
+
+    button.btn {
+        padding: 8px 10px;
+        font-size: 0.875rem;
+    }
+}
+
+.buttons {
+    display: flex;
+    justify-content: end;
+    gap: 1rem;
+}
+
+.event-catalog {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.event-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+    .event-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+.product-details {
+    padding: 15px;
+    text-align: left;
+}
+
+.add-to-cart-btn {
+    background-color: #28a745;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    display: block;
+    width: 100%;
+}
+
+    .add-to-cart-btn:hover {
+        background-color: #218838;
+    }

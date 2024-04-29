@@ -1,0 +1,162 @@
+﻿@page "/event/details/{EventId:int}"
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@using HagaDropsIt.Shared.Entities
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@using HagaDropsIt.Client.Services
+@inject IEventService<EventDto> EventService
+@inject ICartService<CartDto, CartItemDto> CartService
+@inject IOrderService<OrderDto> OrderService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+
+<div class="event-detail-layout">
+
+    @if (eventItem != null)
+    {
+        <div class="event-detail-card">
+            <div class="event-detail-image">
+                <img src="@eventItem.ImageURL" alt="@eventItem.Name" />
+            </div>
+            <div class="event-detail-content">
+                <h1 class="event-title">@eventItem.Name</h1>
+                <p class="event-description">@eventItem.Description</p>
+                <p class="event-info">Location: @eventItem.Location</p>
+                <p class="event-info">Starts: @eventItem.StartDate.ToShortDateString()</p>
+                <p class="event-info">Ends: @eventItem.EndDate.ToShortDateString()</p>
+                <p class="event-price">Price: @(eventItem.Price == 0 ? "Free" : $"{eventItem.Price} SEK")</p>
+                <button class="add-to-cart-btn" @onclick="() => AddToCart(cartItem)">Add to Cart</button>
+            </div>
+        </div>
+        <button class="back-button" @onclick="BackToEvents">
+            <i class="fas fa-arrow-left"></i> Back to Events
+        </button>
+    }
+    else
+    {
+        <p>Event not found.</p>
+    }
+    <div>
+
+        <button class="attendees-button" @onclick="GetAttendees" disabled="true">Show Attendees (Work in progress)</button>
+
+        @if (attendees.Count > 0)
+        {
+            <div class="event-details-attendees" id="event-attendees">
+                Attendees in this event:
+                @foreach (var attendee in attendees)
+                {
+                    <p>@attendee.BuyerEmail</p>
+                }
+            </div>
+        }
+    </div>
+
+</div>
+
+
+
+@code {
+    [Parameter]
+    public int EventId { get; set; }
+    private List<EventDto> events = new();
+    private ApplicationUser user = new();
+    private ClaimsPrincipal User { get; set; }
+
+    private EventDto? eventItem;
+    private CartItemDto cartItem;
+    private List<OrderDto> attendees = new();
+
+
+
+
+    private async Task GetAttendees() => attendees = await OrderService.GetOrdersByEventsByCustomerGuid(Guid.Parse(user.Id), eventItem.Name) as List<OrderDto>;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        var events = await EventService.GetAllEvents();
+        eventItem = events.FirstOrDefault(e => e.Id == EventId);
+        cartItem = new CartItemDto
+            {
+                Event = new Shared.Entities.Event
+                {
+                    Id = eventItem.Id,
+                    Name = eventItem.Name,
+                    Description = eventItem.Description,
+                    ImageURL = eventItem.ImageURL,
+                    StartDate = eventItem.StartDate,
+                    EndDate = eventItem.EndDate,
+                    Location = eventItem.Location,
+                    Price = eventItem.Price
+                },
+                Quantity = 1
+            };
+
+
+
+
+        var autState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        User = autState.User;
+        if (User.Identity.IsAuthenticated)
+        {
+            user = await UserManager.GetUserAsync(User);
+        }
+
+        if (user is null)
+        {
+            return;
+        }
+
+        if (user.Cart is null)
+        {
+            user.Cart = new Cart();
+            var userCart = await CartService.GetCartByUserGuid(Guid.Parse(user.Id));
+            user.Cart.Id = userCart.Id;
+            user.Cart.UserGuid = userCart.UserGuid;
+            user.Cart.CartItems = userCart.CartItems.Select(dto =>
+                new CartItem
+                    {
+                        Product = dto.Product,
+                        Event = dto.Event
+                    }).ToList();
+
+
+        }
+        if (user.Cart is not null)
+        {
+            var userCart = await CartService.GetCartByUserGuid(Guid.Parse(user.Id));
+            user.Cart.Id = userCart.Id;
+            user.Cart.UserGuid = userCart.UserGuid;
+            user.Cart.CartItems = userCart.CartItems.Select(dto =>
+                new CartItem
+                    {
+                        Product = dto.Product,
+                        Event = dto.Event
+                    }).ToList();
+
+        }
+    }
+
+    private async Task AddToCart(CartItemDto cartItem)
+    {
+        if (user != null)
+        {
+            // user.Cart.Events ??= new List<Shared.Entities.Event>();
+            user.Cart.CartItems ??= new List<CartItem>();
+
+
+            await CartService.AddEventToCart(user.Cart.Id, cartItem);
+        }
+
+        StateHasChanged();
+    }
+
+    private void BackToEvents()
+    {
+        NavigationManager.NavigateTo("/event");
+    }
+}

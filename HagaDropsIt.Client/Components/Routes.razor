@@ -1,0 +1,42 @@
+﻿@using HagaDropsIt.Client.Components.Account.Shared
+@using HagaDropsIt.Client.Data
+@using HagaDropsIt.Shared.Entities
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+<Router AppAssembly="typeof(Program).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>
+
+
+@code {
+    
+//     private async Task AssignUserRole()
+//     {
+//         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+//         var user = authState.User;
+
+//         if (user.Identity.IsAuthenticated)
+//         {
+//             if (user.IsInRole("Admin"))
+//             {
+//                 return;
+//             }
+//             var AutUser = await UserManager.FindByEmailAsync(email: user.Identity.Name);
+//             var result = await UserManager.AddToRoleAsync(AutUser, "User");
+//         }
+//         StateHasChanged();
+//     }
+
+// protected override async Task OnInitializedAsync()
+//     {
+//         await AssignUserRole();
+//     }
+
+}

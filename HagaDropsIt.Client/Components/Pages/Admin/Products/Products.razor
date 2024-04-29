@@ -1,0 +1,78 @@
+﻿@page "/admin/products"
+
+@using HagaDropsIt.Client.Data
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@using HagaDropsIt.Client.Components.Pages.Admin
+@inject IProductService<ProductDto> ProductService
+@inject IGenreService<GenreDto> GenreService
+@inject ICategoryService<CategoryDto> CategoryService
+@inject NavigationManager NavigationManager
+@layout AdminLayout
+
+<div class="container">
+	<div class="title">
+	<h3>Products</h3>
+
+	<button class="btn btn-primary" @onclick="AddNewProduct">Add New Product</button>
+	</div>
+	<div id="productCatalog" class="product-catalog">
+		
+		<div class="grid">
+			@foreach (var product in products)
+			{
+				<div class="product-card">
+					<div class="product-details">
+						<div class="img-banner">
+							@if (product.IsOnSale)
+							{
+								<div class="banner on-sale">On Sale!</div>
+							}
+							<img src="@product.ImageURL" alt="@product.Name" class="product-image" />
+
+						</div>
+						<div class="product-info">						
+							<h3>@product.Name</h3>
+							@if (product.IsNew)
+							{
+								<div class="banner new-product">New release!</div>
+							}
+							<p>@product.Description</p>
+							<p class="price">$@product.Price</p>
+						</div>
+					</div>
+					<div class="product-footer">
+						<button class="btn btn-secondary" @onclick="() => EditProduct(product)">Edit</button>
+						<button class="btn btn-danger" @onclick="() => NavigateToDeletePage(product.Id)">Delete</button>
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+</div>
+@code {
+	private List<ProductDto> products = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		products = (await ProductService.GetAllProducts()).ToList();
+	}
+
+	private void NavigateToDeletePage(int productId)
+	{
+		NavigationManager.NavigateTo($"/admin/products/delete/{productId}");
+	}
+
+
+	private void EditProduct(ProductDto product)
+	{
+		NavigationManager.NavigateTo($"/admin/products/edit/{product.Id}");
+	}
+
+	private void AddNewProduct()
+	{
+		NavigationManager.NavigateTo("/admin/products/add");
+	}
+
+
+}

@@ -1,0 +1,323 @@
+﻿
+@page "/product/details/{productId:int}"
+
+@using HagaDropsIt.Shared.Interfaces
+@using HagaDropsIt.Shared.DTOs
+@using System.Security.Claims
+@using HagaDropsIt.Shared.Entities
+@using Microsoft.AspNetCore.Identity
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject IProductService<ProductDto> ProductService
+@inject ICategoryService<CategoryDto> CategoryService
+@inject IGenreService<GenreDto> GenreService
+@inject ICartService<CartDto, CartItemDto> CartService
+@inject IReviewService<ReviewDto> ReviewService
+
+
+
+@if (_product is not null)
+{
+	
+	<div class="product-detail-container">
+		
+		<div class="product-detail">
+			<div class="product-image">
+				<img src="@_product.ImageURL" alt="@_product.Name" />
+			</div>
+			<div class="product-content">
+				<h2>@_product.Name</h2>
+				<p>@_product.Description</p>
+				<p>
+					<span class="badge bg-light text-dark">@_productCategory.Name</span>
+                    <span class="badge rounded-pill bg-dark">@_productGenre.Name</span>
+				</p>
+				@if (_product.IsOnSale)
+				{
+					<p class="price"><del>Pris: @_product.Price.ToString("0.00") kr</del></p>
+					<p class="price"><span class="text-danger">Kampanj: @((_product.Price - (_product.Price * _product.Discount)).ToString("0.00")) kr</span></p>
+				}
+				else
+				{
+					<p class="price">Pris: @_product.Price kr</p>
+				}
+				@if (_averageRating == 0)
+				{
+					<p>Inga recensioner/betyg</p>
+				}
+				else
+				{
+					<p>Betyg: <span class="badge rounded-pill bg-warning text-black">@_averageRating / 5</span></p>
+				}
+				<button class="add-to-cart" @onclick="AddToCart">Add to Cart</button>
+			</div>
+		</div>
+		<button class="back-button" @onclick="BackToStore">
+			<i class="fas fa-arrow-left"></i> Back to Store
+		</button>
+		<div class="reviews">
+			<h3>Customer Reviews</h3>
+			@if (_reviews.Any())
+			{
+				@foreach (var review in _reviews)
+				{
+					var reviewUser = UserManager.FindByIdAsync(review.UserGuid.ToString()).Result;
+					var reviewUserName = reviewUser?.Nickname ?? reviewUser?.FirstName ?? "Anonym";
+
+					<div class="review">
+						@if (review.Id == _reviewBeingEditedId)
+						{
+							<EditForm Model="@_editReview" OnValidSubmit="@(() => UpdateReview(_editReview))">
+								<div class="review-form">
+									<input type="text" @bind="@_editReview.Title" />
+									<textarea @bind="@_editReview.Content"></textarea>
+									<select @bind="@_editReview.Rating">
+										@for (int i = 1; i <= 5; i++)
+										{
+											<option value="@i" selected="@(_editReview.Rating == i)">@i</option>
+										}
+									</select>
+								</div>
+								<br />
+								<button class="btn btn-success" type="submit">Spara</button>
+								<button class="btn btn-warning" type="button" @onclick="CancelEdit">Avbryt</button>
+								<br />
+							</EditForm>
+						}
+						else
+						{
+							<h4 class="review-title">@review.Title</h4>
+							<p class="review-content">@review.Content</p>
+							<p class="review-author">@reviewUserName | <span class="badge rounded-pill bg-warning text-black">@review.Rating / 5</span> | @review.DateCreated</p>
+							<br />
+							@if (reviewUser != null && User != null && review.UserGuid.ToString() == User.Id)
+							{
+								<div class="d-flex justify-content-between">
+									<button class="btn btn-outline-secondary" @onclick="() => EditReview(review)">Redigera</button>
+									<div>
+										<button class="btn btn-outline-danger" @onclick="() => DeleteReview(review.Id)">Ta bort</button>
+									</div>
+								</div>
+							}
+						}
+					</div>
+				}
+			}
+			else
+			{
+				<p>No reviews yet.</p>
+			}
+			@if (_isUserLoggedIn)
+			{
+				<div class="accordion accordion-flush" id="accordionFlushExample">
+					<div class="accordion-item">
+						<h2 class="accordion-header" id="flush-headingOne">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+								Skriv en recension
+							</button>
+						</h2>
+						<div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+							<div class="accordion-body">
+								<div class="review-form">
+									<EditForm Model="@_newUserReview" OnValidSubmit="@AddReview">
+										<input type="text" placeholder="Title" @bind="_newUserReview.Title" />
+										<textarea placeholder="Review" @bind="_newUserReview.Content"></textarea>
+										<select @bind="_newUserReview.Rating">
+											@for (int i = 1; i <= 5; i++)
+											{
+												<option value="@i" selected="@(_newUserReview.Rating == i)">@i</option>
+											}
+										</select>
+										<button type="submit">Submit Review</button>
+									</EditForm>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+			else
+			{
+				<p>Please log in to write a review...</p>
+			}
+		</div>
+	</div>
+}
+else
+{
+	<p>Product not found.</p>
+}
+
+@code {
+	[Parameter]
+	public int ProductId { get; set; }
+
+	private double _averageRating;
+	private bool _isUserLoggedIn = false;
+	private int _reviewBeingEditedId = -1;
+	private ProductDto? _product;
+	private CategoryDto _productCategory = new CategoryDto();
+	private GenreDto _productGenre = new();
+	private List<ReviewDto> _reviews = new();
+	private ReviewDto _newUserReview = new();
+	private ReviewDto _editReview = new();
+
+	private ClaimsPrincipal? UserClaims { get; set; }
+	public ApplicationUser? User { get; set; }
+	private ApplicationUser user = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		UserClaims = authState.User;
+		User = await UserManager.GetUserAsync(UserClaims);
+
+		if (authState.User.Identity is not null)
+		{
+			_isUserLoggedIn = authState.User.Identity.IsAuthenticated;
+		}
+
+		_product = await ProductService.GetProductById(ProductId);
+		_productCategory = await CategoryService.GetCategoryById(_product.CategoryId);
+        _productGenre = await GenreService.GetGenreById(_product.GenreId);
+
+		_reviews = await ReviewService.GetReviewsByProductId(ProductId) as List<ReviewDto> ?? new List<ReviewDto>();
+		_newUserReview.Rating = 5;
+
+		user = await UserManager.GetUserAsync(authState.User);
+
+		if (user is null)
+		{
+			return;
+		}
+
+		if (User.Cart is null)
+		{
+			User.Cart = new Cart();
+			var userCart = await CartService.GetCartByUserGuid(Guid.Parse(User.Id));
+			User.Cart.Id = userCart.Id;
+			User.Cart.UserGuid = userCart.UserGuid;
+            user.Cart.CartItems = userCart.CartItems.Select(dto =>
+                new CartItem
+                {
+                    Product = dto.Product,
+                    Event = dto.Event
+                }).ToList();
+		}
+
+		_product = await ProductService.GetProductById(ProductId);
+		_productCategory = await CategoryService.GetCategoryById(_product.CategoryId);
+
+		_productGenre = await GenreService.GetGenreById(_product.GenreId) as GenreDto ?? new GenreDto();
+		
+
+		if (_reviews.Count == 0)
+		{
+			_averageRating = 0;
+			return;
+		}
+
+		_averageRating = _reviews.Sum(r => r.Rating) / (_reviews.Count + 0.0);
+	}
+
+	private async Task AddToCart()
+	{
+		if (_product is null)
+		{
+			return;
+		}
+
+		// User.Cart.Products ??= new List<Product>();
+		User.Cart.CartItems ??= new List<CartItem>();
+        var cartItem = new CartItemDto
+        {
+            Product = new Product
+            {
+                Id = _product.Id,
+                CategoryId = _product.CategoryId,
+                GenreId = _product.GenreId,
+                Name = _product.Name,
+                Description = _product.Description,
+                Price = _product.Price,
+                ImageURL = _product.ImageURL,
+                PgRating = _product.PgRating,
+                IsOnSale = _product.IsOnSale,
+                IsNew = _product.IsNew,
+                IsInvisible = _product.IsInvisible,
+                Discount = _product.Discount,
+                Stock = _product.Stock,
+                RealeaseDate = _product.RealeaseDate
+            },
+            Quantity = 1
+        };
+
+		await CartService.AddProductToCart(User.Cart.Id, cartItem);
+		StateHasChanged();
+	}
+
+	private async Task AddReview()
+	{
+		_newUserReview.ProductId = ProductId;
+		_newUserReview.UserGuid = Guid.Parse(User.Id);
+		_newUserReview.DateCreated = DateTime.Now;
+
+		await ReviewService.AddReview(_newUserReview);
+		_reviews?.Add(_newUserReview);
+
+		_newUserReview = new ReviewDto();
+		await UpdateReviewList();
+	}
+
+	private void EditReview(ReviewDto review)
+	{
+		_reviewBeingEditedId = review.Id;
+
+		_editReview = new ReviewDto
+			{
+				Id = review.Id,
+				ProductId = review.ProductId,
+				UserGuid = review.UserGuid,
+				Title = review.Title,
+				Content = review.Content,
+				Rating = review.Rating,
+				DateCreated = DateTime.Now
+			};
+	}
+
+	private async Task CancelEdit()
+	{
+		_reviewBeingEditedId = -1;
+	}
+
+	private async Task UpdateReview(ReviewDto review)
+	{
+		await ReviewService.UpdateReview(review);
+		_reviewBeingEditedId = -1;
+		await UpdateReviewList();
+	}
+
+	private async Task DeleteReview(int reviewId)
+	{
+		await ReviewService.DeleteReview(reviewId);
+		await UpdateReviewList();
+	}
+
+	private async Task UpdateReviewList()
+	{
+		_reviews = await ReviewService.GetReviewsByProductId(ProductId) as List<ReviewDto> ?? new List<ReviewDto>();
+
+		if (_reviews.Count == 0)
+		{
+			_averageRating = 0;
+			return;
+		}
+
+		_averageRating = _reviews.Sum(r => r.Rating) / (_reviews.Count + 0.0);
+	}
+
+	private void BackToStore()
+    {
+        NavigationManager.NavigateTo("/store");
+    }
+}

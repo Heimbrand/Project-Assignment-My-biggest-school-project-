@@ -1,0 +1,60 @@
+﻿@page "/admin/orders"
+@using HagaDropsIt.Client.Data
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@using MongoDB.Bson
+@inject IOrderService<OrderDto> OrderService
+@layout AdminLayout
+
+<h3>Orders</h3>
+
+@if (orders == null)
+{
+    <p><em>Loading orders...</em></p>
+}
+else if (orders.Count == 0)
+{
+    <p>No orders to display.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Order Number</th>
+                <th>Buyer Email</th>
+                <th>Order Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in orders)
+            {
+                <tr>
+                    <td>@order.OrderNumber</td>
+                    <td>@order.BuyerEmail</td>
+                    <td>@order.OrderDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<OrderDto> orders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allOrders = await OrderService.GetAllOrders();
+
+        if (allOrders is null)
+        {
+            return;
+        }
+        
+        orders.AddRange(allOrders);
+
+    }
+}

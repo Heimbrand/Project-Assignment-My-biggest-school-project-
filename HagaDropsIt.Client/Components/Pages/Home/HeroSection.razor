@@ -1,0 +1,176 @@
+﻿@rendermode InteractiveServer
+@using System.Threading
+@using HagaDropsIt.Client.Data
+@using HagaDropsIt.Shared.DTOs
+@using HagaDropsIt.Shared.Interfaces
+@inject IJSRuntime JSRuntime
+@inject IEventService<EventDto> EventService
+@inject NavigationManager NavigationManager
+
+<div class="hero-section">
+    @foreach (var column in columns)
+    {
+        <div class="column @column.ExpandedClass" @onclick="() => ToggleExpand(column)">
+            <img src="@column.ImageURL" alt="Image" style="width: 100%; height:100%;">
+            <div class="carousel-text @(column.IsExpanded ? "visible" : "hidden")">
+                <p class="event-title">@column.Name</p>
+                <p class="event-description">@column.Description</p>
+                <div class="event-badge">
+                    <span class="event-date badge  rounded-pill ">From @column.StartDate.ToShortDateString() to @column.EndDate.ToShortDateString()</span>
+
+                </div>
+                <span class="read-more" @onclick="() => ViewEventDetails(column.Id)">Read more</span>
+             </div>
+        </div>
+    }
+</div>
+
+
+<div id="carouselExampleIndicators" class="carousel hero-section-carousel slide d-md-none" style="height: 100vh;">
+    <div class="carousel-inner h-100">
+        @for (int i = 0; i < columns.Count; i++)
+        {
+
+            <div class="carousel-item @(_currentCarouselIndex == i ? "active" : "") h-100">
+                <div class="carousel-caption ">
+                </div>
+                <div class="carousel-content d-flex align-items-center justify-content-center h-100">
+                     <img src="@columns[i].ImageURL" alt="Carousel Image" style="max-width: 100%; height:100%;">
+                     <div class="carousel-text-mobile">
+                        <p class="event-title">@columns[i].Name</p>
+                        <p class="event-description">@columns[i].Description</p>
+                        <div class="event-badge">
+                            <span class="event-date badge  rounded-pill ">From @columns[i].StartDate.ToShortDateString() to @columns[i].EndDate.ToShortDateString()</span>
+                           
+                        </div>
+                        <span class="read-more " @onclick="() => ViewEventDetails(columns[i].Id)">Read more</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+
+
+@code {
+    private Timer? _carouselTimer;
+    private int _currentCarouselIndex = 0;
+    private int reRenderTime = 12;
+    private List<EventDto> events = new();
+    private List<ColumnModel> columns = new ColumnModel[0].ToList();
+    private Timer? _timer;
+    private int _currentExpandedIndex = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _timer = new Timer(CycleThroughColumns, null, TimeSpan.Zero, TimeSpan.FromSeconds(reRenderTime));
+        _carouselTimer = new Timer(CycleThroughCarouselItems, null, TimeSpan.Zero, TimeSpan.FromSeconds(reRenderTime));
+
+        var result = await EventService.GetAllEvents();
+       events = result.Take(3).ToList();
+
+        columns = events.Select(eventDto => new ColumnModel
+            {
+                StartDate = eventDto.StartDate,
+                EndDate = eventDto.EndDate,
+                Id = eventDto.Id,
+                Name = eventDto.Name,
+                Description = eventDto.Description,
+                Date = eventDto.StartDate,
+                ImageURL = eventDto.ImageURL,
+                Location = eventDto.Location,
+                Price = eventDto.Price,
+                AgeRestriction = eventDto.AgeRestriction,
+                IsExpanded = false 
+            }).ToList();
+
+        StateHasChanged();
+    }
+
+    private void CycleThroughCarouselItems(object? state)
+    {
+        if (columns.Count > 0)
+        {
+            _currentCarouselIndex = (_currentCarouselIndex + 1) % columns.Count;
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void CycleThroughColumns(object? state)
+    {
+        if (columns.Count > 0)
+        {
+            _currentExpandedIndex = (_currentExpandedIndex + 1) % columns.Count;
+            for (int i = 0; i < columns.Count; i++)
+            {
+                columns[i].IsExpanded = (i == _currentExpandedIndex);
+            }
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private void ToggleExpand(ColumnModel clickedColumn)
+    {
+        if (clickedColumn.IsExpanded)
+        {
+            clickedColumn.IsExpanded = false;
+            _timer?.Change(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(reRenderTime));
+            _carouselTimer?.Change(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(reRenderTime));
+        }
+        else
+        {
+            foreach (var column in columns)
+            {
+                column.IsExpanded = false;
+            }
+
+            clickedColumn.IsExpanded = true;
+            _timer?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+            _carouselTimer?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        }
+    }
+
+
+    public class ColumnModel
+    {
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public DateTime Date { get; set; }
+        public string ImageURL { get; set; }
+        public string Location { get; set; }
+        public double Price { get; set; }
+        public int AgeRestriction { get; set; }
+        public bool IsExpanded { get; set; }
+        public string ExpandedClass => IsExpanded ? "expanded" : "";
+
+    }
+
+    private async Task ViewEventDetails(int eventId)
+    {
+        var url = $"event/details/{eventId}";
+        NavigationManager.NavigateTo(url);
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+        _carouselTimer?.Dispose();
+    }
+
+}
